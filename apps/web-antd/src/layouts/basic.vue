@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, h, onMounted, watch } from 'vue';
+import { computed, h, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -17,7 +17,9 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
 import { GithubOutlined, UserOutlined } from '@antdv-next/icons';
+import { Drawer, FloatButton } from 'antdv-next';
 
+import { AIChat } from '#/components/aiChat';
 import { TenantToggle } from '#/components/tenant-toggle';
 import { $t } from '#/locales';
 import { resetRoutes } from '#/router';
@@ -32,6 +34,7 @@ const accessStore = useAccessStore();
 const router = useRouter();
 const { destroyWatermark, updateWatermark } = useWatermark();
 
+const open = ref(false);
 const tenantStore = useTenantStore();
 const menus = computed(() => {
   const defaultMenus = [
@@ -167,4 +170,8 @@ useVersionUpdate();
       <LockScreen :avatar @to-login="handleLogout" />
     </template>
   </BasicLayout>
+  <FloatButton placement="left" @click="open = true" />
+  <Drawer v-model:open="open" :size="600">
+    <AIChat />
+  </Drawer>
 </template>

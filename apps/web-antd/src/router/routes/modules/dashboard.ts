@@ -16,7 +16,7 @@ const routes: RouteRecordRaw[] = [
       title: $t('page.dashboard.title'),
     },
     name: 'Dashboard',
-    path: '/dashboard',
+    path: '/',
     redirect: '/analytics',
     children: [
       {

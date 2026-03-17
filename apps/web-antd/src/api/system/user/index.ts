@@ -13,6 +13,7 @@ import { alovaInstance } from '#/utils/http';
 
 enum Api {
   deptTree = '/system/user/deptTree',
+  deptUserTree = '/system/user/deptUserTree',
   listDeptUsers = '/system/user/list/dept',
   root = '/system/user',
   userAuthRole = '/system/user/authRole',
@@ -168,4 +169,11 @@ export function getDeptTree() {
  */
 export function listUserByDeptId(deptId: ID) {
   return alovaInstance.get<User[]>(`${Api.listDeptUsers}/${deptId}`);
+}
+/**
+ * 获取部门人员树
+ * @returns 部门树数组
+ */
+export function getDeptUserTree() {
+  return alovaInstance.get<DeptTree[]>(Api.deptUserTree);
 }
