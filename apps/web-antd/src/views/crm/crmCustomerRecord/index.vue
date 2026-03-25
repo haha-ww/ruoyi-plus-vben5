@@ -4,9 +4,15 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmCustomerRecordForm } from '#/api/crm/crmCustomerRecord/model';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
+
+import {
+  Avatar,
+  Timeline,
+  TimelineItem
+} from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -15,10 +21,15 @@ import {
 } from '#/api/crm/crmCustomerRecord';
 
 import crmCustomerRecordDrawer from './crmCustomerRecord-drawer.vue';
-import { columns, querySchema } from './data';
+import { columns } from './data';
 
 const props = defineProps({
-  customerid: { default: '', type: String },
+  customerid: { default: '0', type: String },
+});
+watch(() => props.customerid, async (newVal) => {
+  if (newVal) {
+    await tableApi.query();
+  }
 });
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -27,7 +38,6 @@ const formOptions: VbenFormProps = {
       allowClear: true,
     },
   },
-  schema: querySchema(),
   wrapperClass: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
   // 处理区间选择器RangePicker时间格式 将一个字段映射为两个字段 搜索/导出会用到
   // 不需要直接删除
@@ -79,6 +89,7 @@ const gridOptions: VxeGridProps = {
 const [BasicTable, tableApi] = useVbenVxeGrid({
   formOptions,
   gridOptions,
+  showSearchForm: false,
 });
 
 const [CrmCustomerRecordDrawer, drawerApi] = useVbenDrawer({
@@ -119,13 +130,13 @@ function handleMultiDelete() {
   <div class="follow-header">
     <h3>动态记录</h3>
   </div>
-  <a-empty v-if="list.length === 0" />
-  <a-timeline v-else>
-    <a-timeline-item v-for="item in list" :key="item.id">
+  <Empty v-if="list.length === 0" />
+  <Timeline v-else>
+    <TimelineItem v-for="item in list" :key="item.id">
       <div class="message-container">
         <!-- 用户头像和用户名 -->
         <div class="user-info">
-          <a-avatar :size="40" :src="item.avatar" icon="User" />
+          <Avatar :size="40" :src="item.avatar" icon="User" />
           <div class="user-details">
             <p class="username">{{ item.nickName }}</p>
             <p class="timestamp">{{ item.createTime }}</p>
@@ -135,8 +146,8 @@ function handleMultiDelete() {
         <!-- 消息内容 -->
         <p class="message-content">{{ item.reason }}</p>
       </div>
-    </a-timeline-item>
-  </a-timeline>
+    </TimelineItem>
+  </Timeline>
   <BasicTable style="width: 0; height: 0" />
 </template>
 <style scoped>

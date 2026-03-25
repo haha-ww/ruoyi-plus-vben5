@@ -4,6 +4,8 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmCustomerTeamForm } from '#/api/crm/crmCustomerTeam/model';
 
+import { watch } from 'vue';
+
 import { Page, useVbenModal } from '@vben/common-ui';
 
 import { Modal, Popconfirm, Space } from 'antdv-next';
@@ -18,7 +20,12 @@ import crmCustomerTeamDrawer from './crmCustomerTeam-drawer.vue';
 import { columns, querySchema } from './data';
 
 const props = defineProps({
-  customerid: { default: '', type: String },
+  customerid: { default: '0', type: String },
+});
+watch(() => props.customerid, async (newVal) => {
+  if (newVal) {
+    await tableApi.query();
+  }
 });
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -58,6 +65,7 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues = {}) => {
+        console.log('crmCustomerTeamList',  formValues);
         return await crmCustomerTeamList({
           pageNum: page.currentPage,
           pageSize: page.pageSize,
@@ -116,7 +124,7 @@ function handleMultiDelete() {
 
 <template>
   <Page :auto-content-height="true">
-    <BasicTable table-title="客户-客户映射人员列表">
+    <BasicTable table-title="客户-团队成员列表">
       <template #toolbar-tools>
         <Space>
           <a-button
@@ -139,12 +147,6 @@ function handleMultiDelete() {
       </template>
       <template #action="{ row }">
         <Space>
-          <action-button
-            v-access:code="['crm:crmCustomerTeam:edit']"
-            @click.stop="handleEdit(row)"
-          >
-            {{ $t('pages.common.edit') }}
-          </action-button>
           <Popconfirm
             placement="left"
             title="确认删除？"

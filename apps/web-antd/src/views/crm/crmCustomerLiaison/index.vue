@@ -4,6 +4,8 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmCustomerLiaisonForm } from '#/api/crm/crmCustomerLiaison/model';
 
+import { watch } from 'vue';
+
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
 import { Popconfirm, Space } from 'antdv-next';
@@ -20,8 +22,14 @@ import crmCustomerLiaisonDrawer from './crmCustomerLiaison-drawer.vue';
 import { columns, querySchema } from './data';
 
 const props = defineProps({
-  customerid: { default: '', type: String },
+  customerid: { default: '0', type: String },
 });
+watch(() => props.customerid, async (newVal) => {
+  if (newVal) {
+    console.log('customerid', props.customerid);
+    await tableApi.query();
+  }
+}, { immediate: true });
 const formOptions: VbenFormProps = {
   commonConfig: {
     labelWidth: 80,
@@ -60,6 +68,7 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues = {}) => {
+        console.log('query', formValues);
         return await crmCustomerLiaisonList({
           pageNum: page.currentPage,
           pageSize: page.pageSize,

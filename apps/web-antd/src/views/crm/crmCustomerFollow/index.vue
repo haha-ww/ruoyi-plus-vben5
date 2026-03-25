@@ -4,9 +4,18 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmCustomerFollowForm } from '#/api/crm/crmCustomerFollow/model';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
+
+import {
+  Alert,
+  Avatar,
+  Button,
+  Dropdown,
+  Timeline,
+  TimelineItem
+} from 'antdv-next';
 
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -18,7 +27,12 @@ import crmCustomerFollowDrawer from './crmCustomerFollow-drawer.vue';
 import { columns } from './data';
 
 const props = defineProps({
-  customerid: { default: '', type: String },
+  customerid: { default: '0', type: String },
+});
+watch(() => props.customerid, async (newVal) => {
+  if (newVal) {
+    await tableApi.query();
+  }
 });
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -64,7 +78,6 @@ const gridOptions: VxeGridProps = {
           ...formValues,
         });
         list.value = res.rows;
-        console.log(res);
         return res;
       },
     },
@@ -120,8 +133,8 @@ function handleMultiDelete() {
     <h3>跟进记录</h3>
     <a-button type="primary" @click="handleAdd">添加跟进记录</a-button>
   </div>
-  <a-timeline>
-    <a-timeline-item
+  <Timeline>
+    <TimelineItem
       v-for="item in list"
       :key="item.id"
       :color="item.status == 2 ? 'green' : item.status == 1 ? 'red' : 'gray'"
@@ -129,32 +142,27 @@ function handleMultiDelete() {
       <div class="message-container">
         <!-- 用户头像和用户名 -->
         <div class="user-info">
-          <a-avatar :size="40" :src="item.avatar" icon="User" />
+          <Avatar :size="40" :src="item.avatar" icon="User" />
           <div class="user-details">
             <p class="username">{{ item.nickName }}</p>
             <p class="timestamp">{{ item.createTime }}</p>
           </div>
           <div style="display: flex; justify-content: flex-end; width: 80%">
-            <a-dropdown>
-              <a-button>...</a-button>
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item>
-                    <a @click="handleEdit(item)">编辑</a>
-                  </a-menu-item>
-                  <a-menu-item>
-                    <a @click="handleDelete(item)">删除</a>
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
+            <Dropdown
+:menu="{ items: [
+              { key: 'edit', label: '编辑', onClick: () => handleEdit(item) },
+              { key: 'delete', label: '删除', onClick: () => handleDelete(item) }
+            ] }"
+>
+              <Button>...</Button>
+            </Dropdown>
           </div>
         </div>
         <!-- 消息内容 -->
         <p class="message-content" v-html="item.content"></p>
 
         <!-- 提醒时间 -->
-        <a-alert
+        <Alert
           v-if="item.types === 1"
           :message="`提醒时间：${item.time}`"
           type="info"
@@ -163,8 +171,8 @@ function handleMultiDelete() {
           style="margin-top: 10px"
         />
       </div>
-    </a-timeline-item>
-  </a-timeline>
+    </TimelineItem>
+  </Timeline>
   <BasicTable style="width: 0; height: 0" />
   <CrmCustomerFollowDrawer @reload="tableApi.query()" />
 </template>

@@ -5,11 +5,6 @@ import { getDictOptions } from '#/utils/dict';
 import { renderDict } from '#/utils/render';
 
 export const querySchema: FormSchemaGetter = () => [
-  {
-    component: 'Input',
-    fieldName: 'customerId',
-    label: '客户ID',
-  },
 ];
 
 // 需要使用i18n注意这里要改成getter形式 否则切换语言不会刷新

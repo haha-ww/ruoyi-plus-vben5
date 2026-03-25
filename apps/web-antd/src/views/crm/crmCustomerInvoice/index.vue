@@ -4,6 +4,8 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmInvoiceForm } from '#/api/crm/crmInvoice/model';
 
+import { watch } from 'vue';
+
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
 import { Popconfirm, Space } from 'antdv-next';
@@ -21,6 +23,11 @@ import { columns, querySchema } from './data';
 
 const props = defineProps({
   customerid: { default: '', type: String },
+});
+watch(() => props.customerid, async (newVal) => {
+  if (newVal) {
+    await tableApi.query();
+  }
 });
 const formOptions: VbenFormProps = {
   commonConfig: {

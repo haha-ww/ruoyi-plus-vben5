@@ -7,11 +7,6 @@ import { renderDict } from '#/utils/render';
 export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Input',
-    fieldName: 'customerId',
-    label: '客户ID',
-  },
-  {
-    component: 'Input',
     fieldName: 'contractName',
     label: '合同名称',
   },

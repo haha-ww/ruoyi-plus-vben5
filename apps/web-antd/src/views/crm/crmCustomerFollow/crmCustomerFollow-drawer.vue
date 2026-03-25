@@ -62,7 +62,7 @@ type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<ErpMaterialInfoForm>>({});
+const formRules = ref<AntdFormRules<CrmCustomerFollowForm>>({});
 
 const formInstance = ref<FormInstance>();
 
@@ -115,6 +115,7 @@ async function handleConfirm() {
     await (isUpdate.value
       ? crmCustomerFollowUpdate(data)
       : crmCustomerFollowAdd(data));
+      resetInitialized();
     emit('reload');
     drawerApi.close();
   } catch (error) {
@@ -134,10 +135,10 @@ async function handleCancel() {
 <template>
   <BasicDrawer :title="title">
     <Form :label-col="{ span: 4 }" ref="formInstance" :model="formData">
-      <FormItem label="内容" :rules="formRules.content">
+      <FormItem label="内容" name="content" :rules="formRules.content">
         <Tinymce v-model="formData.content" />
       </FormItem>
-      <FormItem label="类型" :rules="formRules.types">
+      <FormItem label="类型" name="types" :rules="formRules.types">
         <RadioGroup v-model:value="formData.types">
           <RadioButton :value="0">说明</RadioButton>
           <RadioButton :value="1">提醒</RadioButton>
@@ -146,6 +147,7 @@ async function handleCancel() {
       <FormItem
         v-if="formData.types === 1"
         label="提醒时间"
+        name="time"
         :rules="formRules.time"
       >
         <!-- 需要自行调整参数 -->
@@ -155,7 +157,7 @@ async function handleCancel() {
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="状态" :rules="formRules.status">
+      <FormItem label="状态" name="status" :rules="formRules.status">
         <RadioGroup v-model:value="formData.status">
           <RadioButton :value="0">待处理</RadioButton>
           <RadioButton :value="1">放弃</RadioButton>

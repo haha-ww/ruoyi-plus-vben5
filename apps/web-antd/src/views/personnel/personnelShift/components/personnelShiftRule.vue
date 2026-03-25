@@ -7,9 +7,8 @@ import { onMounted } from 'vue';
 
 import { getPopupContainer } from '@vben/utils';
 
-import { Form, FormItem, InputNumber, Select, Table } from 'antdv-next';
+import { Form, FormItem, InputNumber, Select, Table, TimePicker } from 'antdv-next';
 
-import { calculateDuration } from '#/utils/date';
 import { getDictOptions } from '#/utils/dict';
 
 const props = defineProps({
@@ -18,33 +17,10 @@ const props = defineProps({
     default: () => [],
   },
 });
-const emit = defineEmits(['update:workTime']);
+
 onMounted(() => {
   console.log('getPopupContainer', props.rulelist);
 });
-// 提取时长计算逻辑
-function handleTimeChange() {
-  console.log('props.rulelist', props.rulelist);
-  let total1 = 0;
-  let total2 = 0;
-  props.rulelist.forEach((rule: PersonnelShiftRuleForm, index) => {
-    if (rule.workHours && rule.offHours) {
-      const total = calculateDuration(
-        rule.workHours,
-        rule.offHours,
-        rule.firstDayAfter,
-        rule.secondDayAfter,
-      );
-      if (index === 0) {
-        total1 = total;
-      }
-      if (index === 1) {
-        total2 = total;
-      }
-    }
-  });
-  emit('update:workTime', total1, total2);
-}
 
 const columns = [
   {
@@ -72,7 +48,7 @@ const columns = [
     width: 400,
   },
 ];
-// 上班日变化
+
 function firstDayAfterChange() {
   const val = props.rulelist[1].firstDayAfter;
   const newRuleList = [...props.rulelist];
@@ -84,10 +60,10 @@ function firstDayAfterChange() {
     newRuleList[1].secondDayAfterDisabled = false;
   }
 }
-// 下班日变化
+
 function secondDayAfterChange() {
   const val = props.rulelist[0].secondDayAfter;
-  if (props.rulelist > 1) {
+  if (props.rulelist.length > 1) {
     const newRuleList = [...props.rulelist];
     if (val === 1) {
       newRuleList[1].firstDayAfter = 1;
@@ -125,9 +101,6 @@ function secondDayAfterChange() {
               v-model:value="record.workHours"
               format="HH:mm"
               value-format="HH:mm:ss"
-              @change="
-                (timeString) => handleTimeChange(timeString, 'workHours')
-              "
             />
           </FormItem>
           <FormItem label="晚到超过">
@@ -174,7 +147,6 @@ function secondDayAfterChange() {
               v-model:value="record.offHours"
               format="HH:mm"
               value-format="HH:mm:ss"
-              @change="handleTimeChange($event, 'secondDayAfter')"
             />
           </FormItem>
           <FormItem label="提前" :label-col="{ span: 3 }">

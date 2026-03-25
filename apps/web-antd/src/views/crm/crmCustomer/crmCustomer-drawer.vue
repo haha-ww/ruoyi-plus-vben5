@@ -23,7 +23,7 @@ import {
   TabPane,
   Tabs,
   TextArea,
-  TreeSelect,
+  TreeSelect
 } from 'antdv-next';
 import { pick } from 'lodash-es';
 
@@ -126,8 +126,7 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
 
     if (isUpdate.value && id) {
       const record = await crmCustomerInfo(id);
-      record.customerLabel = record.customerLabel?.split(',');
-      // 只赋值存在的字段
+      record.customerLabel = record?.customerLabel =='' ? [] : record.customerLabel?.split(',');
       const filterRecord = pick(record, Object.keys(defaultValues));
       formData.value = filterRecord;
     }
@@ -142,7 +141,6 @@ async function handleConfirm() {
   try {
     drawerApi.lock(true);
     await formInstance.value?.validate();
-    // 可能会做数据处理 使用cloneDeep深拷贝
     const data = cloneDeep(formData.value);
     data.customerLabel = data.customerLabel?.join(',');
     await (isUpdate.value ? crmCustomerUpdate(data) : crmCustomerAdd(data));
@@ -182,6 +180,15 @@ async function setupRegionSelect() {
         <Form :label-col="{ span: 4 }" ref="formInstance" :model="formData">
           <Row>
             <Col span="12">
+              <FormItem label="客户编号" :rules="formRules.customerNo">
+                <Input
+                  v-model:value="formData.customerNo"
+                  placeholder="系统自动生成"
+                  disabled
+                />
+              </FormItem>
+            </Col>
+            <Col span="12">
               <FormItem label="客户名称" :rules="formRules.customerName">
                 <Input
                   v-model:value="formData.customerName"
@@ -189,6 +196,8 @@ async function setupRegionSelect() {
                 />
               </FormItem>
             </Col>
+          </Row>
+          <Row>
             <Col span="12">
               <FormItem label="客户电话" :rules="formRules.customerPhone">
                 <Input
@@ -197,8 +206,6 @@ async function setupRegionSelect() {
                 />
               </FormItem>
             </Col>
-          </Row>
-          <Row>
             <Col span="12">
               <FormItem label="客户标签" :rules="formRules.customerLabel">
                 <TreeSelect
@@ -212,15 +219,7 @@ async function setupRegionSelect() {
                 />
               </FormItem>
             </Col>
-            <Col span="12">
-              <FormItem label="客户编号" :rules="formRules.customerNo">
-                <Input
-                  v-model:value="formData.customerNo"
-                  :placeholder="$t('ui.formRules.required')"
-                />
-              </FormItem>
-            </Col>
-          </Row>
+</Row>
           <Row>
             <Col span="12">
               <FormItem label="客户来源" :rules="formRules.customerWay">
@@ -229,7 +228,6 @@ async function setupRegionSelect() {
                   :options="getDictOptions('customer_way')"
                   :get-popup-container="getPopupContainer"
                   :placeholder="$t('ui.formRules.selectRequired')"
-                  :allow-clear="true"
                 />
               </FormItem>
             </Col>

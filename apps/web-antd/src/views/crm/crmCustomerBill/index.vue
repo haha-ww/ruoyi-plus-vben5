@@ -4,7 +4,7 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmBillForm } from '#/api/crm/crmBill/model';
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
@@ -19,6 +19,11 @@ import { columns, querySchema } from './data';
 const props = defineProps({
   customerid: { default: '', type: String },
 });
+watch(() => props.customerid, async (newVal) => {
+  if (newVal) {
+    await tableApi.query();
+  }
+}, { immediate: true });
 const formOptions: VbenFormProps = {
   commonConfig: {
     labelWidth: 80,

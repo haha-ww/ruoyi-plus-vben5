@@ -13,12 +13,6 @@ export const querySchema: FormSchemaGetter = () => [
     label: '客户名称',
   },
   {
-    component: 'Select',
-    componentProps: {},
-    fieldName: 'customerLabel',
-    label: '客户标签',
-  },
-  {
     component: 'Input',
     fieldName: 'customerNo',
     label: '客户编号',
@@ -43,18 +37,8 @@ export const querySchema: FormSchemaGetter = () => [
   },
   {
     component: 'Input',
-    fieldName: 'areaCascade',
-    label: '省市区',
-  },
-  {
-    component: 'Input',
     fieldName: 'customerPhone',
     label: '客户电话',
-  },
-  {
-    component: 'Input',
-    fieldName: 'address',
-    label: '详细地址',
   },
 ];
 
@@ -72,6 +56,10 @@ export const columns: VxeGridProps['columns'] = [
     field: 'customerName',
   },
   {
+    title: '客户编号',
+    field: 'customerNo',
+  },
+  {
     title: '客户电话',
     field: 'customerPhone',
   },
@@ -84,10 +72,6 @@ export const columns: VxeGridProps['columns'] = [
         return renderDict(row.customerWay, 'customer_way');
       },
     },
-  },
-  {
-    title: '退回次数',
-    field: 'returnNum',
   },
   {
     title: '客户状态',
@@ -117,6 +101,6 @@ export const columns: VxeGridProps['columns'] = [
     fixed: 'right',
     slots: { default: 'action' },
     title: '操作',
-    width: 180,
+    width: 120,
   },
 ];

@@ -23,6 +23,8 @@ export function useAppConfig(
     VITE_GLOB_RSA_PUBLIC_KEY,
     VITE_GLOB_SSE_ENABLE,
     VITE_GLOB_WEBSOCKET_ENABLE,
+    VITE_GLOB_AMAP_KEY,
+    VITE_GLOB_AMAP_SECRET,
   } = config;
 
   return {
@@ -39,5 +41,10 @@ export function useAppConfig(
     sseEnable: VITE_GLOB_SSE_ENABLE === 'true',
     // 是否开启websocket
     websocketEnable: VITE_GLOB_WEBSOCKET_ENABLE === 'true',
+    // 高德地图
+    amap: {
+      key: VITE_GLOB_AMAP_KEY,
+      secret: VITE_GLOB_AMAP_SECRET,
+    },
   };
 }

@@ -20,7 +20,7 @@ import {
   Select,
   Textarea,
   TreeSelect,
-} from 'ant-design-vue';
+} from 'antdv-next';
 import { pick } from 'lodash-es';
 
 import {
@@ -135,6 +135,7 @@ async function handleConfirm() {
     const data = cloneDeep(formData.value);
     data.customerLabel = data.customerLabel?.join(',');
     await (isUpdate.value ? crmCustomerUpdate(data) : crmCustomerAdd(data));
+    resetInitialized();
     emit('reload');
     await handleCancel();
   } catch (error) {

@@ -16,6 +16,7 @@ import {
   Form,
   FormItem,
   Input,
+  InputNumber,
   RadioGroup,
   Select,
 } from 'antdv-next';
@@ -66,7 +67,7 @@ type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<ErpMaterialInfoForm>>({});
+const formRules = ref<AntdFormRules<CrmBillForm>>({});
 
 const formInstance = ref<FormInstance>();
 
@@ -85,6 +86,7 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
   class: 'w-[550px]',
   fullscreenButton: false,
   closeOnClickModal: false,
+  onBeforeClose,
   onClosed: handleCancel,
   onConfirm: handleConfirm,
   onOpenChange: async (isOpen) => {
@@ -144,7 +146,7 @@ async function getContractList() {
 <template>
   <BasicDrawer :title="title">
     <Form :label-col="{ span: 4 }" ref="formInstance" :model="formData">
-      <FormItem label="合同" :rules="formRules.contractId">
+      <FormItem label="合同" name="contractId" :rules="formRules.contractId">
         <Select
           v-model:value="formData.contractId"
           :options="contractList"
@@ -153,13 +155,13 @@ async function getContractList() {
           :field-names="{ label: 'contractName', value: 'id' }"
         />
       </FormItem>
-      <FormItem label="财务科目" :rules="formRules.billCateId">
+      <FormItem label="财务科目" name="billCateId" :rules="formRules.billCateId">
         <Input
           v-model:value="formData.billCateId"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="类型" :rules="formRules.billTypes">
+      <FormItem label="类型" name="billTypes" :rules="formRules.billTypes">
         <RadioGroup
           option-type="button"
           button-style="solid"
@@ -167,14 +169,17 @@ async function getContractList() {
           :options="getDictOptions('bill_type', true)"
         />
       </FormItem>
-      <FormItem label="金额" :rules="formRules.num">
-        <Input
+      <FormItem label="金额" name="num" :rules="formRules.num">
+        <InputNumber
+          style="width: 200px;"
+          :min="0"
+          :precision="2"
           v-model:value="formData.num"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
 
-      <FormItem label="支付方式" :rules="formRules.typeId">
+      <FormItem label="支付方式" name="typeId" :rules="formRules.typeId">
         <Select
           v-model:value="formData.typeId"
           :options="getDictOptions('pay_type', true)"
@@ -182,7 +187,7 @@ async function getContractList() {
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="收款日期" :rules="formRules.date">
+      <FormItem label="收款日期" name="date" :rules="formRules.date">
         <!-- 需要自行调整参数 -->
         <DatePicker
           v-model:value="formData.date"
@@ -190,13 +195,13 @@ async function getContractList() {
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="付款单号" :rules="formRules.billNo">
+      <FormItem label="付款单号" name="billNo" :rules="formRules.billNo">
         <Input
           v-model:value="formData.billNo"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="备注" :rules="formRules.remark">
+      <FormItem label="备注" name="remark" :rules="formRules.remark">
         <Input
           v-model:value="formData.remark"
           :placeholder="$t('ui.formRules.required')"

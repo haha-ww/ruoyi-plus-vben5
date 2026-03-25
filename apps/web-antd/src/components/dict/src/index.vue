@@ -41,7 +41,7 @@ export default defineComponent({
     fallback: {
       required: false,
       type: [String, Function] as PropType<DictFallback>,
-      default: 'unknown',
+      default: '',
     },
   },
   setup(props) {

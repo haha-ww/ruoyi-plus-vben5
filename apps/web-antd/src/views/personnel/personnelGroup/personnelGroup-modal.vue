@@ -3,6 +3,9 @@
 vscode默认配置文件会自动格式化/移除未使用依赖
 -->
 <script setup lang="ts">
+import type { FormInstance } from 'antdv-next';
+import type { Rule } from 'antdv-next/dist/form/types';
+
 import type { PersonnelGroupForm } from '#/api/personnel/personnelGroup/model';
 
 import { computed, onUnmounted, ref } from 'vue';
@@ -15,6 +18,7 @@ import { cloneDeep } from '@vben/utils';
 import AMapLoader from '@amap/amap-jsapi-loader';
 import {
   Checkbox,
+  CheckboxGroup,
   Col,
   Divider,
   Form,
@@ -147,10 +151,14 @@ async function handleConfirm() {
     modalApi.lock(true);
     await formInstance.value?.validate();
     // 可能会做数据处理 使用cloneDeep深拷贝
+    if (Array.isArray(formData.value.repairType)) {
+      formData.value.repairType = formData.value.repairType.join(',');
+    }
     const data = cloneDeep(formData.value);
     await (isUpdate.value
       ? personnelGroupUpdate(data)
       : personnelGroupAdd(data));
+    resetInitialized();
     emit('reload');
     modalApi.close();
   } catch (error) {
@@ -322,9 +330,6 @@ function handleSearch(str: string) {
 function handleSelect(item) {
   map?.setCenter([item.lng, item.lat]);
 }
-const restTypeChange = () => {
-  formData.value.repairType = formData.value.repairType.join(',');
-};
 onUnmounted(() => {
   map?.destroy();
   marker = null;
@@ -334,16 +339,16 @@ onUnmounted(() => {
 
 <template>
   <BasicModal :title="title">
-    <Form :label-col="{ span: 4 }">
+    <Form :label-col="{ span: 4 }" :model="formData" ref="formInstance">
       <Divider orientation="left">基本信息</Divider>
 
-      <FormItem label="考勤组名称" :rules="formRules.name">
+      <FormItem label="考勤组名称" name="name" :rules="formRules.name">
         <Input
           v-model:value="formData.name"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="考勤类型" :rules="formRules.type">
+      <FormItem label="考勤类型" name="type" :rules="formRules.type">
         <RadioGroup v-model:value="formData.type">
           <Radio class="radioStyle" :value="0">
             人员
@@ -361,6 +366,7 @@ onUnmounted(() => {
       </FormItem>
       <FormItem
         v-if="formData.type === 1"
+        name="deptArr"
         label="需要考勤部门"
         :rules="formRules.deptArr"
       >
@@ -382,6 +388,7 @@ onUnmounted(() => {
       </FormItem>
       <FormItem
         v-if="formData.type === 0"
+        name="userArr"
         label="需要考勤人员"
         :rules="formRules.userArr"
       >
@@ -401,7 +408,7 @@ onUnmounted(() => {
           }"
         />
       </FormItem>
-      <FormItem label="考勤班次" :rules="formRules.shiftArr">
+      <FormItem name="shiftArr" label="考勤班次" :rules="formRules.shiftArr">
         <Select
           v-model:value="formData.shiftArr"
           style="width: 100%"
@@ -439,25 +446,26 @@ onUnmounted(() => {
           </div>
         </Col>
         <Col :span="10">
-          <FormItem label="经度" :label-col="{ span: 8 }">
+          <FormItem name="lng" label="经度" :label-col="{ span: 8 }">
             {{ formData.lng }}
           </FormItem>
-          <FormItem label="纬度" :label-col="{ span: 8 }">
+          <FormItem name="lat" label="纬度" :label-col="{ span: 8 }">
             {{ formData.lat }}
           </FormItem>
-          <FormItem label="打卡半径范围（米）" :label-col="{ span: 8 }">
+          <FormItem name="effectiveRange" label="打卡半径范围（米）" :label-col="{ span: 8 }">
             <InputNumber
               v-model:value="formData.effectiveRange"
               @change="updateRadius"
             />
           </FormItem>
-          <FormItem label="考勤地点名称" :label-col="{ span: 8 }">
+          <FormItem name="locationName" label="考勤地点名称" :label-col="{ span: 8 }">
             <TextArea v-model:value="formData.locationName" />
           </FormItem>
         </Col>
       </Row>
       <Divider orientation="left">考勤规则</Divider>
       <div style="display: flex; flex-direction: column; gap: 8px">
+        <FormItem name="repairAllowed" :label-col="{ span: 4 }">
         <Checkbox
           v-model:checked="formData.repairAllowed"
           style="margin-left: 65px"
@@ -465,20 +473,20 @@ onUnmounted(() => {
         >
           允许补卡
         </Checkbox>
+        </FormItem>
         <Card v-if="formData.repairAllowed">
-          <FormItem label="补卡类型">
+          <FormItem name="repairType" label="补卡类型">
             <CheckboxGroup
               v-model:value="formData.repairType"
               name="checkboxgroup"
-              @change="restTypeChange"
             >
-              <a-checkbox value="1">缺卡</a-checkbox>
-              <a-checkbox value="2">迟到</a-checkbox>
-              <a-checkbox value="3">严重迟到</a-checkbox>
-              <a-checkbox value="4">早退</a-checkbox>
+              <Checkbox value="1">缺卡</Checkbox>
+              <Checkbox value="2">迟到</Checkbox>
+              <Checkbox value="3">严重迟到</Checkbox>
+              <Checkbox value="4">早退</Checkbox>
             </CheckboxGroup>
           </FormItem>
-          <FormItem label="补卡时间">
+          <FormItem label="补卡时间" name="isLimitTime">
             <Checkbox
               v-model:checked="formData.isLimitTime"
               @change="restTimeChange"
@@ -486,13 +494,15 @@ onUnmounted(() => {
               限制补卡时间
             </Checkbox>
             <div v-if="formData.isLimitTime">
+              <FormItem label="补卡时间" name="limitTime">
               可申请过去<InputNumber
                 v-model:value="formData.limitTime"
                 :min="0"
               />天内的补卡 填写0天，则只能发起当天的补卡
+              </FormItem>
             </div>
           </FormItem>
-          <FormItem label="补卡次数">
+          <FormItem label="补卡次数" name="isLimitNumber">
             <Checkbox
               v-model:checked="formData.isLimitNumber"
               @change="restNumberChange"
@@ -500,6 +510,7 @@ onUnmounted(() => {
               限制补卡次数
             </Checkbox>
             <div v-if="formData.isLimitNumber">
+              <FormItem label="补卡次数" name="limitNumber">
               每人每月补卡次数上限
               <InputNumber
                 v-model:value="formData.limitNumber"
@@ -508,10 +519,11 @@ onUnmounted(() => {
                 :min="0"
               />
               次
+              </FormItem>
             </div>
           </FormItem>
         </Card>
-
+<FormItem name="isExternal" :label-col="{ span: 4 }">
         <Checkbox
           v-model:checked="formData.isExternal"
           style="margin-left: 65px"
@@ -522,15 +534,16 @@ onUnmounted(() => {
             勾选之后，允许员工不在考勤范围使用外勤打卡，外勤打卡会在打卡报表中体现
           </spqn>
         </Checkbox>
+        </FormItem>
         <Card v-if="formData.isExternal">
-          <FormItem label="外勤打卡备注必填">
+          <FormItem label="外勤打卡备注必填" name="isExternalNote">
             <Switch
               v-model:checked="formData.isExternalNote"
               checked-children="开启"
               un-checked-children="关闭"
             />
           </FormItem>
-          <FormItem label="外勤打卡拍照必填">
+          <FormItem label="外勤打卡拍照必填" name="isExternalPhoto">
             <Switch
               v-model:checked="formData.isExternalPhoto"
               checked-children="开启"

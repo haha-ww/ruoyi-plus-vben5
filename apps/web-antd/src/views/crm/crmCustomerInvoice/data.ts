@@ -12,11 +12,6 @@ export const querySchema: FormSchemaGetter = () => [
   },
   {
     component: 'Input',
-    fieldName: 'customerId',
-    label: '客户ID',
-  },
-  {
-    component: 'Input',
     fieldName: 'contractId',
     label: '合同ID',
   },

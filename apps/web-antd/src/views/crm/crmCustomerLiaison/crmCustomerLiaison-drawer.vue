@@ -44,12 +44,11 @@ const { onBeforeClose, markInitialized, resetInitialized } = useBeforeCloseDiff(
   },
 );
 const [BasicDrawer, drawerApi] = useVbenDrawer({
-  // 在这里更改宽度
   class: 'w-[550px]',
   fullscreenButton: false,
-  // 点击遮罩是否关闭
   closeOnClickModal: false,
-  onCancel: handleCancel,
+  onBeforeClose,
+  onClosed: handleCancel,
   onConfirm: handleConfirm,
   onOpenChange: async (isOpen) => {
     if (!isOpen) {
@@ -67,9 +66,8 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
       await formApi.setValues(record);
     } else {
       await formApi.setValues({ customerId });
-      console.log('record', formApi.getValues());
     }
-
+   await markInitialized();
     drawerApi.drawerLoading(false);
   },
 });
@@ -86,6 +84,7 @@ async function handleConfirm() {
     await (isUpdate.value
       ? crmCustomerLiaisonUpdate(data)
       : crmCustomerLiaisonAdd(data));
+      resetInitialized();
     emit('reload');
     drawerApi.close();
   } catch (error) {

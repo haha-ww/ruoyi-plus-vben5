@@ -48,6 +48,7 @@ const isUpdate = ref(false);
 const title = computed(() => {
   return isUpdate.value ? $t('pages.common.edit') : $t('pages.common.add');
 });
+
 const createRuleDefaults = (
   startName: string,
   afterName: string,
@@ -71,9 +72,7 @@ const createRuleDefaults = (
   startName,
   afterName,
 });
-/**
- * 定义默认值 用于reset
- */
+
 const defaultValues: Partial<PersonnelShiftForm> = {
   id: undefined,
   name: undefined,
@@ -90,35 +89,50 @@ const defaultValues: Partial<PersonnelShiftForm> = {
   rules: [createRuleDefaults('上班1', '下班1', true)],
 };
 
-// 班次2工作时长
-const workTime2 = ref(0);
-// 中途休息时长
-const restPeriod = ref(0);
-// 工作时长
+const formData = ref(defaultValues);
+
+const calculateRuleDuration = (rule: PersonnelShiftRuleForm) => {
+  return calculateDuration(
+    rule.workHours,
+    rule.offHours,
+    rule.firstDayAfter,
+    rule.secondDayAfter,
+  );
+};
+
+const workTime1 = computed(() => {
+  return formData.value.rules[0]
+    ? calculateRuleDuration(formData.value.rules[0])
+    : 0;
+});
+
+const workTime2 = computed(() => {
+  return formData.value.rules[1]
+    ? calculateRuleDuration(formData.value.rules[1])
+    : 0;
+});
+
+const restPeriod = computed(() => {
+  return formData.value.restTime
+    ? calculateDuration(
+        formData.value.restStart,
+        formData.value.restEnd,
+        formData.value.restStartAfter,
+        formData.value.restEndAfter,
+      )
+    : 0;
+});
+
 const workTotal = computed(() => {
   return formatDuration(workTime1.value + workTime2.value - restPeriod.value);
 });
-
-/**
- * 表单数据ref
- */
-const formData = ref(defaultValues);
-// 班次1工作时长
-const workTime1 = ref(
-  calculateDuration(
-    formData.value.rules[0].workHours,
-    formData.value.rules[0].offHours,
-    formData.value.rules[0].firstDayAfter,
-    formData.value.rules[0].secondDayAfter,
-  ),
-);
 type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
   [key: string]: Rule[];
 };
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<PersonnelStaffForm>>({
+const formRules = ref<AntdFormRules<PersonnelShiftForm>>({
   name: [{ required: true, message: '班次名称不能为空' }],
   number: [
     {
@@ -160,9 +174,14 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
 
     if (isUpdate.value && id) {
       const record = await personnelShiftInfo(id);
-      // 只赋值存在的字段
       formData.value = record;
       formData.value.restTimeDisabled = formData.value.number < 2;
+      if (formData.value.rules.length > 0) {
+        for (let i = 0; i < formData.value.rules.length; i++) {
+          formData.value.rules[i].startName = '上班' + (i + 1);
+          formData.value.rules[i].afterName = '下班' + (i + 1);
+        }
+      }
     }
     await markInitialized();
     drawerApi.drawerLoading(false);
@@ -180,6 +199,7 @@ async function handleConfirm() {
       : personnelShiftAdd(data));
     resetInitialized();
     emit('reload');
+    handleCancel();
     drawerApi.close();
   } catch (error) {
     console.error(error);
@@ -190,6 +210,10 @@ async function handleConfirm() {
 
 async function handleCancel() {
   formData.value = defaultValues;
+  formData.value.restStart = '12:00:00';
+  formData.value.restEnd = '13:30:00';
+  formData.value.restStartAfter = 0;
+  formData.value.restEndAfter = 0;
   formInstance.value?.resetFields();
   resetInitialized();
 }
@@ -197,35 +221,15 @@ async function handleCancel() {
 function handleNumberChange() {
   const val = formData.value.number;
   if (val === 1) {
-    // 删除行
     formData.value.rules.splice(1);
-    workTime2.value = 0;
     formData.value.restTimeDisabled = true;
   }
   if (val === 2) {
     formData.value.rules.push(createRuleDefaults('上班2', '下班2', false));
-    workTime2.value = calculateDuration(
-      formData.value.rules[1].workHours,
-      formData.value.rules[1].offHours,
-      formData.value.rules[1].firstDayAfter,
-      formData.value.rules[1].secondDayAfter,
-    );
     formData.value.restTimeDisabled = false;
   }
 }
-// 中途休息开关变化
-function restTimeChange() {
-  const val = formData.value.restTime;
-  restPeriod.value = val
-    ? calculateDuration(
-        formData.value.restStart,
-        formData.value.restEnd,
-        formData.value.restStartAfter,
-        formData.value.restEndAfter,
-      )
-    : 0;
-}
-// 工作时长计算并验证规则是否正确
+
 function workTimeVerify() {
   const ruleDefaultValues = formData.value.rules[0];
   const workHours = ruleDefaultValues.workHours;
@@ -233,12 +237,13 @@ function workTimeVerify() {
   const firstDayAfter = ruleDefaultValues.firstDayAfter;
   const secondDayAfter = ruleDefaultValues.secondDayAfter;
 
-  workTime1.value = calculateDuration(
-    workHours,
-    offHours,
-    firstDayAfter,
-    secondDayAfter,
-  );
+  if (secondDayAfter === 0 && workHours > offHours) {
+    alert({
+      content: '上班时间1不能大于下班时间1',
+      icon: 'danger',
+    });
+    return;
+  }
 
   if (formData.value.restTimeDisabled && formData.value.restTime) {
     if (
@@ -264,25 +269,8 @@ function workTimeVerify() {
       });
       return;
     }
-    restPeriod.value = formData.value.restTime
-      ? calculateDuration(
-          formData.value.restStart,
-          formData.value.restEnd,
-          formData.value.restStartAfter,
-          formData.value.restEndAfter,
-        )
-      : 0;
-  } else {
-    restPeriod.value = 0;
   }
 
-  if (secondDayAfter === 0 && workHours > offHours) {
-    alert({
-      content: '上班时间1不能大于下班时间1',
-      icon: 'danger',
-    });
-    return;
-  }
   if (formData.value.number === 2) {
     const ruleDefaultValues1 = formData.value.rules[1];
     const workHours1 = ruleDefaultValues1.workHours;
@@ -303,13 +291,8 @@ function workTimeVerify() {
       });
       return;
     }
-    workTime2.value = calculateDuration(
-      workHours1,
-      offHours1,
-      firstDayAfter1,
-      secondDayAfter1,
-    );
   }
+
   formData.value.workTime =
     workTime1.value + workTime2.value - restPeriod.value;
   alert({
@@ -354,12 +337,7 @@ function workTimeVerify() {
           计算并验证
         </Button>
       </FormItem>
-      <ShiftRule
-        :rulelist="formData.rules"
-        @update:work-time="
-          (val1, val2) => ((workTime1 = val1), (workTime2 = val2))
-        "
-      />
+      <ShiftRule :rulelist="formData.rules" />
 
       <Row v-if="formData.restTimeDisabled">
         <Col :span="0.1">
@@ -367,7 +345,6 @@ function workTimeVerify() {
             v-model:checked="formData.restTime"
             name="restTime"
             style="margin-top: 5px"
-            @change="restTimeChange"
           />
         </Col>
         <Col :span="23">
@@ -377,24 +354,19 @@ function workTimeVerify() {
             :label-col="{ span: 2 }"
             :rules="formRules.restTime"
           >
-            <FormItem name="restStartAfter" :label-col="{ span: 2 }">
-              <Select
-                v-model:value="formData.restStartAfter"
-                :options="getDictOptions('shift_date_type', true)"
-                :get-popup-container="getPopupContainer"
-                :placeholder="$t('ui.formRules.selectRequired')"
-                style="width: 100px"
-              />
-            </FormItem>
-            <FormItem name="restStart" :label-col="{ span: 2 }">
-              <TimePicker
-                v-model:value="formData.restStart"
-                name="restStart"
-                value-format="HH:mm:ss"
-                format="HH:mm"
-                @change="restTimeChange"
-              />-
-            </FormItem>
+            <Select
+              v-model:value="formData.restStartAfter"
+              :options="getDictOptions('shift_date_type', true)"
+              :get-popup-container="getPopupContainer"
+              :placeholder="$t('ui.formRules.selectRequired')"
+              style="width: 100px"
+            />
+            <TimePicker
+              v-model:value="formData.restStart"
+              name="restStart"
+              value-format="HH:mm:ss"
+              format="HH:mm"
+            />-
             <Select
               v-model:value="formData.restEndAfter"
               :options="getDictOptions('shift_date_type', true)"
@@ -406,7 +378,6 @@ function workTimeVerify() {
               v-model:value="formData.restEnd"
               value-format="HH:mm:ss"
               format="HH:mm"
-              @change="restTimeChange"
             />
           </FormItem>
         </Col>

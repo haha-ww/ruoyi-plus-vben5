@@ -20,6 +20,7 @@ overrides:
   vue: 'catalog:'
 catalog:
   '@alova/adapter-axios': ^2.0.17
+  '@amap/amap-jsapi-loader': 1.0.1
   '@antdv-next/auto-import-resolver': 1.0.7
   '@antdv-next/happy-work-theme': ^1.0.0
   '@antdv-next/icons': 1.0.5
@@ -76,6 +77,7 @@ catalog:
   '@vueuse/integrations': ^14.2.1
   '@vueuse/motion': ^3.0.3
   alova: ^3.4.1
+  ant-design-x-vue: ^1.6.0
   antdv-next: ^1.1.5
   archiver: ^7.0.1
   axios: ^1.13.6
@@ -83,6 +85,7 @@ catalog:
   cac: ^7.0.0
   chalk: ^5.6.2
   cheerio: ^1.2.0
+  chinese-lunar-calendar: ^1.0.0
   circular-dependency-scanner: ^3.0.1
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
@@ -123,6 +126,7 @@ catalog:
   lodash-es: ^4.17.21
   lodash.clonedeep: ^4.5.0
   lucide-vue-next: ^0.577.0
+  lunar-typescript: ^1.0.0
   motion-v: ^1.10.2
   nitropack: ^2.13.1
   nprogress: ^0.2.0

@@ -16,6 +16,7 @@ import {
   Form,
   FormItem,
   Input,
+  InputNumber,
   RadioGroup,
   Select,
   TextArea,
@@ -69,7 +70,7 @@ type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<ErpMaterialInfoForm>>({});
+const formRules = ref<AntdFormRules<CrmContractForm>>({});
 
 const formInstance = ref<FormInstance>();
 
@@ -88,6 +89,7 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
   class: 'w-[550px]',
   fullscreenButton: false,
   closeOnClickModal: false,
+  onBeforeClose,
   onClosed: handleCancel,
   onConfirm: handleConfirm,
   onOpenChange: async (isOpen) => {
@@ -109,7 +111,7 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
       const filterRecord = pick(record, Object.keys(defaultValues));
       formData.value = filterRecord;
     }
-
+await markInitialized();
     drawerApi.drawerLoading(false);
   },
 });
@@ -141,26 +143,26 @@ async function handleCancel() {
 <template>
   <BasicDrawer :title="title">
     <Form :label-col="{ span: 4 }" ref="formInstance" :model="formData">
-      <FormItem label="合同名称" :rules="formRules.contractName">
+      <FormItem label="合同名称" name="contractName" :rules="formRules.contractName">
         <Input
           v-model:value="formData.contractName"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="合同编号" :rules="formRules.contractNo">
+      <FormItem label="合同编号" name="contractNo" :rules="formRules.contractNo">
         <Input
           v-model:value="formData.contractNo"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="合同金额(元)" :rules="formRules.contractPrice">
-        <a-input-number
+      <FormItem label="合同金额(元)" name="contractPrice" :rules="formRules.contractPrice">
+        <InputNumber
           v-model:value="formData.contractPrice"
           :placeholder="$t('ui.formRules.required')"
           style="width: 50%"
         />
       </FormItem>
-      <FormItem label="开始时间" :rules="formRules.startDate">
+      <FormItem label="开始时间" name="startDate" :rules="formRules.startDate">
         <!-- 需要自行调整参数 -->
         <DatePicker
           v-model:value="formData.startDate"
@@ -168,7 +170,7 @@ async function handleCancel() {
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="结束时间" :rules="formRules.endDate">
+      <FormItem label="结束时间" name="endDate" :rules="formRules.endDate">
         <!-- 需要自行调整参数 -->
         <DatePicker
           v-model:value="formData.endDate"
@@ -176,7 +178,7 @@ async function handleCancel() {
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="签约状态" :rules="formRules.signingStatus">
+      <FormItem label="签约状态" name="signingStatus" :rules="formRules.signingStatus">
         <RadioGroup
           option-type="button"
           button-style="solid"
@@ -184,7 +186,7 @@ async function handleCancel() {
           :options="getDictOptions('sign_status', true)"
         />
       </FormItem>
-      <FormItem label="合同分类" :rules="formRules.contractCategory">
+      <FormItem label="合同分类" :name="contractCategory" :rules="formRules.contractCategory">
         <Select
           v-model:value="formData.contractCategory"
           :options="getDictOptions('contract_type', true)"
@@ -192,7 +194,7 @@ async function handleCancel() {
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="备注" :rules="formRules.remark">
+      <FormItem label="备注" name="remark" :rules="formRules.remark">
         <TextArea
           v-model:value="formData.remark"
           :placeholder="$t('ui.formRules.required')"
