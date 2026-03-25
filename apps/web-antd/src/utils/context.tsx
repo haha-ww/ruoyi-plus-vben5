@@ -1,6 +1,23 @@
 import { defineComponent } from 'vue';
 
-import { App } from 'antdv-next';
+import { App, message, Modal, notification } from 'antdv-next';
+
+/**
+ * 初始化全局弹窗方法(静态API作为fallback)
+ * 在app.mount之前调用, 防止路由守卫等早期逻辑访问window.message时报错
+ * app.mount之后PopupContext会用带上下文的实例覆盖
+ */
+export function initPopupContext() {
+  if (!window.message) {
+    window.message = message;
+  }
+  if (!window.modal) {
+    window.modal = Modal;
+  }
+  if (!window.notification) {
+    window.notification = notification;
+  }
+}
 
 /**
  * 弹窗上下文

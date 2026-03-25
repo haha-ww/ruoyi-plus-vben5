@@ -6,6 +6,8 @@
 
 ## 提示
 
+最低需要使用`node版本>22.16.0` 否则会影响编辑器的格式化(需要安装oxc插件)
+
 该分支使用[antdv-next](https://github.com/antdv-next/antdv-next)替代已经不维护的antd-design-vue
 
 该仓库使用vben最新版本v5开发
@@ -63,7 +65,7 @@ admin 账号: admin admin123
 ```json
 "packageManager": "pnpm",
 "engines": {
-  "node": ">=20.15.0",
+  "node": ">=22.16.0",
   "pnpm": "latest"
 },
 ```

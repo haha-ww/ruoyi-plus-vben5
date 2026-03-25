@@ -1,5 +1,5 @@
 {
-  "tailwindCSS.experimental.configFile": "packages/@core/base/design/src/css/global.css",
+  "tailwindCSS.experimental.configFile": "internal/tailwind-config/src/theme.css",
   "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
   // workbench
   "workbench.list.smoothScrolling": true,
@@ -181,9 +181,9 @@
   "stylelint.customSyntax": "postcss-html",
   "stylelint.snippet": ["css", "less", "postcss", "scss", "vue"],
 
-  "typescript.inlayHints.enumMemberValues.enabled": true,
-  "typescript.preferences.preferTypeOnlyAutoImports": true,
-  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "js/ts.inlayHints.enumMemberValues.enabled": true,
+  "js/ts.preferences.preferTypeOnlyAutoImports": true,
+  "js/ts.preferences.includePackageJsonAutoImports": "on",
 
   "eslint.validate": [
     "javascript",
@@ -240,7 +240,7 @@
   "commentTranslate.multiLineMerge": true,
   "vue.server.hybridMode": true,
   "vitest.disableWorkspaceWarning": true,
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
   "editor.linkedEditing": true, // 自动同步更改html标签,
   "vscodeCustomCodeColor.highlightValue": "v-access", // v-access显示的颜色
   "vscodeCustomCodeColor.highlightValueColor": "#CCFFFF",
@@ -257,5 +257,6 @@
     "Spel",
     "tinymce",
     "vitest"
-  ]
+  ],
+  "unocss.disable": true
 }

@@ -17,6 +17,7 @@ import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
 import App from './app.vue';
 import { router } from './router';
+import { initPopupContext } from './utils/context';
 
 async function bootstrap(namespace: string) {
   // 初始化组件适配器
@@ -57,6 +58,9 @@ async function bootstrap(namespace: string) {
   // 初始化 tippy
   const { initTippy } = await import('@vben/common-ui/es/tippy');
   initTippy(app);
+
+  // 初始化全局弹窗方法(静态API fallback, 防止路由守卫中访问undefined)
+  initPopupContext();
 
   // 配置路由及路由守卫
   app.use(router);
