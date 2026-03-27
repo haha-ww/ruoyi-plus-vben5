@@ -2,7 +2,7 @@
 import type { VbenFormProps } from '@vben/common-ui';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
-import type { CrmCustomerRecordForm } from '#/api/crm/crmCustomerRecord/model';
+import type { CrmCustomerRecordVO } from '#/api/crm/crmCustomerRecord/model';
 
 import { ref, watch } from 'vue';
 
@@ -10,6 +10,7 @@ import { useVbenDrawer } from '@vben/common-ui';
 
 import {
   Avatar,
+  Empty,
   Timeline,
   TimelineItem
 } from 'antdv-next';
@@ -17,20 +18,19 @@ import {
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   crmCustomerRecordList,
-  crmCustomerRecordRemove,
 } from '#/api/crm/crmCustomerRecord';
 
 import crmCustomerRecordDrawer from './crmCustomerRecord-drawer.vue';
 import { columns } from './data';
 
 const props = defineProps({
-  customerid: { default: '0', type: String },
+  customerid: { default: '', type: [String, Number] },
 });
 watch(() => props.customerid, async (newVal) => {
   if (newVal) {
     await tableApi.query();
   }
-});
+}, { immediate: true });
 const formOptions: VbenFormProps = {
   commonConfig: {
     labelWidth: 80,
@@ -49,7 +49,7 @@ const formOptions: VbenFormProps = {
   //  ],
   // ],
 };
-const list = ref([]);
+const list = ref<CrmCustomerRecordVO[]>([]);
 const gridOptions: VxeGridProps = {
   checkboxConfig: {
     // 高亮
@@ -92,38 +92,10 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
   showSearchForm: false,
 });
 
-const [CrmCustomerRecordDrawer, drawerApi] = useVbenDrawer({
+const [_CrmCustomerRecordDrawer, _drawerApi] = useVbenDrawer({
   connectedComponent: crmCustomerRecordDrawer,
 });
 
-function handleAdd() {
-  drawerApi.setData({});
-  drawerApi.open();
-}
-
-async function handleEdit(row: Required<CrmCustomerRecordForm>) {
-  drawerApi.setData({ id: row.id });
-  drawerApi.open();
-}
-
-async function handleDelete(row: Required<CrmCustomerRecordForm>) {
-  await crmCustomerRecordRemove(row.id);
-  await tableApi.query();
-}
-
-function handleMultiDelete() {
-  const rows = tableApi.grid.getCheckboxRecords();
-  const ids = rows.map((row: Required<CrmCustomerRecordForm>) => row.id);
-  window.modal.confirm({
-    title: '提示',
-    okType: 'danger',
-    content: `确认删除选中的${ids.length}条记录吗？`,
-    onOk: async () => {
-      await crmCustomerRecordRemove(ids);
-      await tableApi.query();
-    },
-  });
-}
 </script>
 
 <template>

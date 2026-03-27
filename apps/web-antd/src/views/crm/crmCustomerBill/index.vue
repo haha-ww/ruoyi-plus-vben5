@@ -17,7 +17,7 @@ import crmBillDrawer from './crmBill-drawer.vue';
 import { columns, querySchema } from './data';
 
 const props = defineProps({
-  customerid: { default: '', type: String },
+  customerid: { default: '', type: [String, Number] },
 });
 watch(() => props.customerid, async (newVal) => {
   if (newVal) {

@@ -3,6 +3,9 @@
 vscode默认配置文件会自动格式化/移除未使用依赖
 -->
 <script setup lang="ts">
+import type { FormInstance } from 'antdv-next';
+import type { Rule } from 'antdv-next/dist/form/types';
+
 import type { CrmInvoiceForm } from '#/api/crm/crmInvoice/model';
 
 import { computed, nextTick, ref, watch } from 'vue';
@@ -13,11 +16,14 @@ import { $t } from '@vben/locales';
 import { cloneDeep, getPopupContainer } from '@vben/utils';
 
 import {
+  Alert,
   DatePicker,
   Form,
   FormItem,
   Input,
   Select,
+  Steps,
+  Table,
   TextArea,
 } from 'antdv-next';
 import { pick } from 'lodash-es';
@@ -90,9 +96,19 @@ type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<ErpMaterialInfoForm>>({});
+const formRules = ref<AntdFormRules<CrmInvoiceForm>>({
+  serialNumber: [{ required: true, message: '请输入发票流水号', trigger: 'blur' }],
+  contractId: [{ required: true, message: '请选择合同', trigger: 'change' }],
+  name: [{ required: true, message: '请输入发票名称', trigger: 'blur' }],
+  amount: [{ required: true, message: '请输入发票金额', trigger: 'blur' }],
+  types: [{ required: true, message: '请选择发票类型', trigger: 'change' }],
+  status: [{ required: true, message: '请选择发票状态', trigger: 'change' }],
+});
 
 const formInstance = ref<FormInstance>();
+const selectedBillKeys = ref<Array<number | string>>([]);
+const selectedBillRecord = ref<any>(null);
+const billSelectionError = ref('');
 
 function customFormValueGetter() {
   return JSON.stringify(formData.value);
@@ -109,6 +125,7 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
   class: 'w-[850px]',
   fullscreenButton: false,
   closeOnClickModal: false,
+  onBeforeClose,
   onClosed: handleCancel,
   onConfirm: handleConfirm,
   onOpenChange: async (isOpen) => {
@@ -132,23 +149,19 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
     }
     getBillList();
     getContractList();
+    await markInitialized();
     drawerApi.drawerLoading(false);
   },
 });
 // 监听 current 值变化并更新 confirmText
 // 更新确认按钮文本
-function updateConfirmText(newVal) {
+function updateConfirmText(newVal: number = 0) {
   const text = newVal === 0 ? '下一步' : '提交';
   drawerApi.setState({
     confirmText: text,
   });
-  console.log('updateConfirmText', drawerApi.useStore().value);
 }
 
-// 监听 current 值变化并更新 confirmText
-watch(current, () => {
-  nextTick(() => {});
-});
 watch(
   current,
   (newVal) => {
@@ -168,6 +181,10 @@ watch(
 ); */
 async function handleConfirm() {
   if (current.value === 0) {
+    if (!selectedBillRecord.value) {
+      billSelectionError.value = '请先选择一条付款单，再进入下一步';
+      return;
+    }
     current.value = 1;
   } else {
     try {
@@ -190,72 +207,134 @@ async function handleCancel() {
   formData.value = defaultValues;
   formInstance.value?.resetFields();
   resetInitialized();
+  selectedBillKeys.value = [];
+  selectedBillRecord.value = null;
+  billSelectionError.value = '';
   // 重置步骤
   current.value = 0;
   await nextTick();
   updateConfirmText();
 }
 
-const billList = ref([]);
+const billList = ref<any[]>([]);
 async function getBillList() {
-  billList.value = await crmBillList({
+  const res = await crmBillList({
     pageNum: 1,
     pageSize: 100,
     billTypes: 2,
     customerId: formData.value.customerId,
   });
+  billList.value = res?.rows ?? [];
+  if (formData.value.linkBill !== undefined && formData.value.linkBill !== null) {
+    const selectedRow = billList.value.find((item) => {
+      return (
+        String(item?.id) === String(formData.value.linkBill) ||
+        String(item?.billNo) === String(formData.value.linkBill)
+      );
+    });
+    if (selectedRow) {
+      handleBillSelect(selectedRow);
+    }
+  }
 }
-const contractList = ref([]);
+const contractList = ref<any[]>([]);
 async function getContractList() {
-  contractList.value = await crmContractSelectList({
+  const res = await crmContractSelectList({
     customerId: formData.value.customerId,
   });
+  contractList.value = res?.rows ?? [];
 }
 const columns = [
   {
-    name: 'Name',
-    dataIndex: 'name',
-    key: 'name',
+    title: '付款单号',
+    dataIndex: 'billNo',
+    key: 'billNo',
   },
   {
-    title: 'Age',
-    dataIndex: 'age',
-    key: 'age',
+    title: '合同ID',
+    dataIndex: 'contractId',
+    key: 'contractId',
   },
   {
-    title: 'Address',
-    dataIndex: 'address',
-    key: 'address',
+    title: '金额',
+    dataIndex: 'num',
+    key: 'num',
   },
+  {
+    title: '收款日期',
+    dataIndex: 'date',
+    key: 'date',
+  },
+];
+
+function handleBillSelect(record: any) {
+  selectedBillRecord.value = record;
+  selectedBillKeys.value = [record?.id];
+  billSelectionError.value = '';
+  formData.value.linkBill = record?.id ?? record?.billNo;
+  formData.value.contractId = record?.contractId;
+  formData.value.amount = record?.num;
+}
+
+const rowSelection = computed(() => ({
+  type: 'radio' as const,
+  selectedRowKeys: selectedBillKeys.value,
+  onChange: (_keys: Array<number | string>, rows: any[]) => {
+    const record = rows?.[0];
+    if (!record) {
+      selectedBillKeys.value = [];
+      selectedBillRecord.value = null;
+      return;
+    }
+    handleBillSelect(record);
+  },
+}));
+
+function getBillRowKey(record: { id?: number | string }) {
+  return record?.id ?? '';
+}
+
+const stepItems = [
+  { title: '选择付款订单' },
+  { title: '填写发票信息' },
 ];
 </script>
 
 <template>
   <BasicDrawer :title="title">
-    <a-steps :current="current">
-      <a-step title="选择付款订单" />
-      <a-step title="填写发票信息" />
-    </a-steps>
-    <a-table
+    <Steps :current="current" :items="stepItems" />
+    <Alert v-if="current === 0 && billSelectionError" :message="billSelectionError" type="error" show-icon />
+    <Table
       v-if="current === 0"
       :columns="columns"
       :data-source="billList"
-      style="width:"
-    />
-    <Form v-if="current === 1" :label-col="{ span: 4 }">
-      <FormItem label="发票流水号" :rules="formRules.serialNumber">
+      :row-key="getBillRowKey"
+      :row-selection="rowSelection"
+    >
+      <template #bodyCell="{ column, text }">
+        <template v-if="column.dataIndex === 'num'">{{ text ?? 0 }}</template>
+      </template>
+    </Table>
+    <Form
+      v-if="current === 1"
+      ref="formInstance"
+      :model="formData"
+      :rules="formRules"
+      :label-col="{ span: 4 }"
+    >
+      <FormItem name="serialNumber" label="发票流水号" :rules="formRules.serialNumber">
         <Input
           v-model:value="formData.serialNumber"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="客户ID" :rules="formRules.customerId">
+      <FormItem name="customerId" label="客户ID" :rules="formRules.customerId">
         <Input
           v-model:value="formData.customerId"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="合同ID" :rules="formRules.contractId">
+      <FormItem name="contractId" label="合同ID" :rules="formRules.contractId">
         <Select
           v-model:value="formData.contractId"
           :options="contractList"
@@ -264,37 +343,37 @@ const columns = [
           :field-names="{ label: 'contractName', value: 'id' }"
         />
       </FormItem>
-      <FormItem label="发票类目ID" :rules="formRules.categoryId">
+      <FormItem name="categoryId" label="发票类目ID" :rules="formRules.categoryId">
         <Input
           v-model:value="formData.categoryId"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="发票名称" :rules="formRules.name">
+      <FormItem name="name" label="发票名称" :rules="formRules.name">
         <Input
           v-model:value="formData.name"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="发票编号" :rules="formRules.num">
+      <FormItem name="num" label="发票编号" :rules="formRules.num">
         <Input
           v-model:value="formData.num"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="合同金额" :rules="formRules.price">
+      <FormItem name="price" label="合同金额" :rules="formRules.price">
         <Input
           v-model:value="formData.price"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="发票金额" :rules="formRules.amount">
+      <FormItem name="amount" label="发票金额" :rules="formRules.amount">
         <Input
           v-model:value="formData.amount"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="发票类型" :rules="formRules.types">
+      <FormItem name="types" label="发票类型" :rules="formRules.types">
         <Select
           v-model:value="formData.types"
           :options="getDictOptions('invoice_type', true)"
@@ -302,55 +381,55 @@ const columns = [
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="发票抬头" :rules="formRules.title">
+      <FormItem name="title" label="发票抬头" :rules="formRules.title">
         <Input
           v-model:value="formData.title"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="纳税人识别号" :rules="formRules.ident">
+      <FormItem name="ident" label="纳税人识别号" :rules="formRules.ident">
         <Input
           v-model:value="formData.ident"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="开户行" :rules="formRules.bank">
+      <FormItem name="bank" label="开户行" :rules="formRules.bank">
         <Input
           v-model:value="formData.bank"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="开户账号" :rules="formRules.account">
+      <FormItem name="account" label="开户账号" :rules="formRules.account">
         <Input
           v-model:value="formData.account"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="开票地址" :rules="formRules.address">
+      <FormItem name="address" label="开票地址" :rules="formRules.address">
         <Input
           v-model:value="formData.address"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="电话" :rules="formRules.tel">
+      <FormItem name="tel" label="电话" :rules="formRules.tel">
         <Input
           v-model:value="formData.tel"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="邮寄联系人" :rules="formRules.collectName">
+      <FormItem name="collectName" label="邮寄联系人" :rules="formRules.collectName">
         <Input
           v-model:value="formData.collectName"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="邮寄联系电话" :rules="formRules.collectTel">
+      <FormItem name="collectTel" label="邮寄联系电话" :rules="formRules.collectTel">
         <Input
           v-model:value="formData.collectTel"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="邮寄方式" :rules="formRules.collectType">
+      <FormItem name="collectType" label="邮寄方式" :rules="formRules.collectType">
         <Select
           v-model:value="formData.collectType"
           :options="[]"
@@ -358,19 +437,19 @@ const columns = [
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="邮寄邮箱" :rules="formRules.collectEmail">
+      <FormItem name="collectEmail" label="邮寄邮箱" :rules="formRules.collectEmail">
         <Input
           v-model:value="formData.collectEmail"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="邮寄地址" :rules="formRules.mailAddress">
+      <FormItem name="mailAddress" label="邮寄地址" :rules="formRules.mailAddress">
         <Input
           v-model:value="formData.mailAddress"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="开票方式" :rules="formRules.invoiceType">
+      <FormItem name="invoiceType" label="开票方式" :rules="formRules.invoiceType">
         <Select
           v-model:value="formData.invoiceType"
           :options="[]"
@@ -378,13 +457,13 @@ const columns = [
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="开票地址" :rules="formRules.invoiceAddress">
+      <FormItem name="invoiceAddress" label="开票地址" :rules="formRules.invoiceAddress">
         <Input
           v-model:value="formData.invoiceAddress"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="发票状态" :rules="formRules.status">
+      <FormItem name="status" label="发票状态" :rules="formRules.status">
         <Select
           v-model:value="formData.status"
           :options="getDictOptions('invoice_status', true)"
@@ -392,66 +471,64 @@ const columns = [
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="作废状态" :rules="formRules.invalid">
+      <FormItem name="invalid" label="作废状态" :rules="formRules.invalid">
         <Input
           v-model:value="formData.invalid"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="开票日期" :rules="formRules.billDate">
-        <!-- 需要自行调整参数 -->
+      <FormItem name="billDate" label="开票日期" :rules="formRules.billDate">
         <DatePicker
           v-model:value="formData.billDate"
           format="YYYY-MM-DD HH:mm:ss"
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="实际开票日期" :rules="formRules.realDate">
-        <!-- 需要自行调整参数 -->
+      <FormItem name="realDate" label="实际开票日期" :rules="formRules.realDate">
         <DatePicker
           v-model:value="formData.realDate"
           format="YYYY-MM-DD HH:mm:ss"
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="备注内容" :rules="formRules.mark">
+      <FormItem name="mark" label="备注内容" :rules="formRules.mark">
         <TextArea
           v-model:value="formData.mark"
           :placeholder="$t('ui.formRules.required')"
           :rows="4"
         />
       </FormItem>
-      <FormItem label="开票备注" :rules="formRules.remark">
+      <FormItem name="remark" label="开票备注" :rules="formRules.remark">
         <Input
           v-model:value="formData.remark"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="业务员备注" :rules="formRules.cardRemark">
+      <FormItem name="cardRemark" label="业务员备注" :rules="formRules.cardRemark">
         <Input
           v-model:value="formData.cardRemark"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="财务备注" :rules="formRules.financeRemark">
+      <FormItem name="financeRemark" label="财务备注" :rules="formRules.financeRemark">
         <Input
           v-model:value="formData.financeRemark"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="关联审批ID" :rules="formRules.linkId">
+      <FormItem name="linkId" label="关联审批ID" :rules="formRules.linkId">
         <Input
           v-model:value="formData.linkId"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="撤销申请ID" :rules="formRules.revokeId">
+      <FormItem name="revokeId" label="撤销申请ID" :rules="formRules.revokeId">
         <Input
           v-model:value="formData.revokeId"
           :placeholder="$t('ui.formRules.required')"
         />
       </FormItem>
-      <FormItem label="关联付款单ID" :rules="formRules.linkBill">
+      <FormItem name="linkBill" label="关联付款单ID" :rules="formRules.linkBill">
         <Input
           v-model:value="formData.linkBill"
           :placeholder="$t('ui.formRules.required')"

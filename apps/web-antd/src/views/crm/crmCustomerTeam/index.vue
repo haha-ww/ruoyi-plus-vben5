@@ -20,13 +20,13 @@ import crmCustomerTeamDrawer from './crmCustomerTeam-drawer.vue';
 import { columns, querySchema } from './data';
 
 const props = defineProps({
-  customerid: { default: '0', type: String },
+  customerid: { default: '', type: [String, Number] },
 });
 watch(() => props.customerid, async (newVal) => {
   if (newVal) {
     await tableApi.query();
   }
-});
+}, { immediate: true });
 const formOptions: VbenFormProps = {
   commonConfig: {
     labelWidth: 80,
