@@ -1,7 +1,27 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import { ref } from 'vue';
 
+import { listMaterialSelect } from '#/api/wcommon';
+import { getDictOptions } from '#/utils/dict';
+import { renderDict } from '#/utils/render';
+
+getMaterialOptions()
+/**
+ * 查询物料下拉列表
+ */
+const materialOptions = ref<any[]>([]);
+/**
+ * 查询物料下拉列表
+ */
+async function getMaterialOptions() {
+  const res = await listMaterialSelect();
+  res.forEach((item) => {
+    item.disabled = null
+  });
+  materialOptions.value = res || [];
+}
 export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Input',
@@ -14,13 +34,19 @@ export const querySchema: FormSchemaGetter = () => [
     label: 'bom编码',
   },
   {
-    component: 'Input',
+    component: 'Select',
     fieldName: 'materialId',
-    label: '物料id',
+    label: '物料名称',
+    componentProps:{
+      options: materialOptions,
+      fieldNames: { label: 'materialName', value: 'id' },
+    }
   },
   {
-    component: 'RadioGroup',
+    component: 'Select',
     componentProps: {
+      // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
+      options: getDictOptions('sys_normal_disable'),
       buttonStyle: 'solid',
       optionType: 'button',
     },
@@ -30,29 +56,11 @@ export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Select',
     componentProps: {
+      // 可选从DictEnum中获取 DictEnum.BOM_TYPE 便于维护
+      options: getDictOptions('bom_type'),
     },
     fieldName: 'bomType',
-    label: 'bom类型(字典 bom_type)',
-  },
-  {
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-    fieldName: 'effectiveDate',
-    label: '生效日期',
-  },
-  {
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-    fieldName: 'expiryDate',
-    label: '失效日期',
+    label: 'bom类型',
   },
 ];
 
@@ -60,10 +68,6 @@ export const querySchema: FormSchemaGetter = () => [
 // export const columns: () => VxeGridProps['columns'] = () => [
 export const columns: VxeGridProps['columns'] = [
   { type: 'checkbox', width: 60 },
-  {
-    title: '',
-    field: 'id',
-  },
   {
     title: 'bom名称',
     field: 'bomName',
@@ -73,24 +77,32 @@ export const columns: VxeGridProps['columns'] = [
     field: 'bomCode',
   },
   {
-    title: '物料id',
-    field: 'materialId',
+    title: 'bom版本',
+    field: 'version',
+  },
+  {
+    title: '物料名称',
+    field: 'materialName',
   },
   {
     title: '状态',
     field: 'status',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
+        return renderDict(row.status, 'sys_normal_disable');
+      },
+    },
   },
   {
-    title: 'bom类型(字典 bom_type)',
+    title: 'bom类型',
     field: 'bomType',
-  },
-  {
-    title: '生效日期',
-    field: 'effectiveDate',
-  },
-  {
-    title: '失效日期',
-    field: 'expiryDate',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.BOM_TYPE 便于维护
+        return renderDict(row.bomType, 'bom_type');
+      },
+    },
   },
   {
     title: '备注',
@@ -101,74 +113,7 @@ export const columns: VxeGridProps['columns'] = [
     fixed: 'right',
     slots: { default: 'action' },
     title: '操作',
-    width: 180,
+    width: 300,
   },
 ];
 
-export const modalSchema: FormSchemaGetter = () => [
-  {
-    label: '',
-    fieldName: 'id',
-    component: 'Input',
-    dependencies: {
-      show: () => false,
-      triggerFields: [''],
-    },
-  },
-  {
-    label: 'bom名称',
-    fieldName: 'bomName',
-    component: 'Input',
-  },
-  {
-    label: 'bom编码',
-    fieldName: 'bomCode',
-    component: 'Input',
-  },
-  {
-    label: '物料id',
-    fieldName: 'materialId',
-    component: 'Input',
-  },
-  {
-    label: '状态',
-    fieldName: 'status',
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-  },
-  {
-    label: 'bom类型(字典 bom_type)',
-    fieldName: 'bomType',
-    component: 'Select',
-    componentProps: {
-    },
-  },
-  {
-    label: '生效日期',
-    fieldName: 'effectiveDate',
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-  },
-  {
-    label: '失效日期',
-    fieldName: 'expiryDate',
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-  },
-  {
-    label: '备注',
-    fieldName: 'remark',
-    component: 'Textarea',
-  },
-];

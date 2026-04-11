@@ -1,6 +1,8 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import { getDictOptions } from '#/utils/dict';
+import { renderDict } from '#/utils/render';
 
 export const querySchema: FormSchemaGetter = () => [
   {
@@ -29,10 +31,10 @@ export const querySchema: FormSchemaGetter = () => [
     label: '日期',
   },
   {
-    component: 'RadioGroup',
+    component: 'Select',
     componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
+      // 可选从DictEnum中获取 DictEnum.PURCHASE_PLAN_STATUS 便于维护
+      options: getDictOptions('purchase_plan_status'),
     },
     fieldName: 'status',
     label: '采购计划状态',
@@ -66,6 +68,12 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '采购计划状态',
     field: 'status',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.PURCHASE_PLAN_STATUS 便于维护
+        return renderDict(row.status, 'purchase_plan_status');
+      },
+    },
   },
   {
     title: '备注',
@@ -80,53 +88,3 @@ export const columns: VxeGridProps['columns'] = [
   },
 ];
 
-export const modalSchema: FormSchemaGetter = () => [
-  {
-    label: '主键',
-    fieldName: 'id',
-    component: 'Input',
-    dependencies: {
-      show: () => false,
-      triggerFields: [''],
-    },
-  },
-  {
-    label: '采购计划编码',
-    fieldName: 'planCode',
-    component: 'Input',
-  },
-  {
-    label: '销售订单id',
-    fieldName: 'salesOrderId',
-    component: 'Input',
-  },
-  {
-    label: '销售订单编码',
-    fieldName: 'salesOrderCode',
-    component: 'Input',
-  },
-  {
-    label: '日期',
-    fieldName: 'planDate',
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-  },
-  {
-    label: '采购计划状态',
-    fieldName: 'status',
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-  },
-  {
-    label: '备注',
-    fieldName: 'remark',
-    component: 'Input',
-  },
-];

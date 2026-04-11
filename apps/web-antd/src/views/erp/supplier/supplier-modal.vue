@@ -21,7 +21,7 @@ const title = computed(() => {
 const [BasicForm, formApi] = useVbenForm({
   commonConfig: {
     // 默认占满两列
-    formItemClass: 'col-span-2',
+    formItemClass: 'col-span-1',
     // 默认label宽度 px
     labelWidth: 80,
     // 通用配置项 会影响到所有表单项
@@ -43,7 +43,7 @@ const { onBeforeClose, markInitialized, resetInitialized } = useBeforeCloseDiff(
 
 const [BasicModal, modalApi] = useVbenModal({
   // 在这里更改宽度
-  class: 'w-[550px]',
+  class: 'w-[750px]',
   fullscreenButton: false,
   onBeforeClose,
   onClosed: handleClosed,

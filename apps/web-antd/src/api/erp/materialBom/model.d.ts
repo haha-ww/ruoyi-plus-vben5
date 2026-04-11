@@ -1,5 +1,21 @@
 import type { PageQuery, BaseEntity } from '#/api/common';
 
+export interface MaterialBomDetailVO {
+  id?: string | number;
+  isBomNode: number;
+  materialId?: string | number;
+  materialName?: string;
+  materialCode?: string;
+  bomId?: string | number;
+  bomVersion?: string;
+  unitId?: string | number;
+  unitName?: string;
+  model?: string;
+  quantity?: number;
+  supplyMode?: string;
+  remark?: string;
+}
+
 export interface MaterialBomVO {
   /**
    * 
@@ -45,6 +61,11 @@ export interface MaterialBomVO {
    * 备注
    */
   remark: string;
+
+  /**
+   * bom明细列表
+   */
+  bomDetailList?: MaterialBomDetailVO[];
 
 }
 
@@ -93,6 +114,11 @@ export interface MaterialBomForm extends BaseEntity {
    * 备注
    */
   remark?: string;
+
+  /**
+   * bom明细列表
+   */
+  bomDetailList?: MaterialBomDetailVO[];
 
 }
 

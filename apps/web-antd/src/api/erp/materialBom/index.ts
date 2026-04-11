@@ -1,4 +1,4 @@
-import type { MaterialBomVO, MaterialBomForm, MaterialBomQuery } from './model';
+import type { MaterialBomForm, MaterialBomQuery, MaterialBomVO } from './model';
 
 import type { ID, IDS } from '#/api/common';
 import type { PageResult } from '#/api/common';
@@ -59,3 +59,13 @@ export function materialBomUpdate(data: MaterialBomForm) {
 export function materialBomRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/materialBom/${id}`);
 }
+
+/**
+ * 获取bom树
+ * @param query
+ */
+export function getMaterialBomTree(query: MaterialBomQuery) {
+  return alovaInstance.get<MaterialBomVO[]>('/erp/materialBom/getBomTree', {
+    params: query
+  });
+};

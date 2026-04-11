@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { WarehouseInfoForm } from '#/api/erp/warehouseInfo/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
+
 import { Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
@@ -11,11 +14,10 @@ import {
   warehouseInfoList,
   warehouseInfoRemove,
 } from '#/api/erp/warehouseInfo';
-import type { WarehouseInfoForm } from '#/api/erp/warehouseInfo/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import warehouseInfoModal from './warehouseInfo-modal.vue';
 import { columns, querySchema } from './data';
+import warehouseInfoModal from './warehouseInfo-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {

@@ -1,10 +1,11 @@
-import type { PageQuery, BaseEntity } from '#/api/common';
+import type { BaseEntity, PageQuery } from '#/api/common';
+
 
 export interface SalesOrderVO {
   /**
    * 主键ID
    */
-  id: string | number;
+  id: number | string;
 
   /**
    * 销售订单编码
@@ -14,7 +15,7 @@ export interface SalesOrderVO {
   /**
    * 客户名称id
    */
-  customerId: string | number;
+  customerId: number | string;
 
   /**
    * 订单状态(字典 order_status)
@@ -24,12 +25,12 @@ export interface SalesOrderVO {
   /**
    * 部门id
    */
-  deptId: string | number;
+  deptId: number | string;
 
   /**
    * 销售人员
    */
-  salesPersonId: string | number;
+  salesPersonId: number | string;
 
   /**
    * 订单来源
@@ -104,7 +105,7 @@ export interface SalesOrderVO {
   /**
    * 结算账户id
    */
-  bankAccountId: string | number;
+  bankAccountId: number | string;
 
   /**
    * 结算账户账号
@@ -146,13 +147,17 @@ export interface SalesOrderVO {
    */
   approvalTime: string;
 
+  /**
+   * 销售订单明细列表
+   */
+  salesOrderItemList?: SalesOrderItemVO[];
 }
 
 export interface SalesOrderForm extends BaseEntity {
   /**
    * 主键ID
    */
-  id?: string | number;
+  id?: number | string;
 
   /**
    * 销售订单编码
@@ -162,7 +167,7 @@ export interface SalesOrderForm extends BaseEntity {
   /**
    * 客户名称id
    */
-  customerId?: string | number;
+  customerId?: number | string;
 
   /**
    * 订单状态(字典 order_status)
@@ -172,12 +177,12 @@ export interface SalesOrderForm extends BaseEntity {
   /**
    * 部门id
    */
-  deptId?: string | number;
+  deptId?: number | string;
 
   /**
    * 销售人员
    */
-  salesPersonId?: string | number;
+  salesPersonId?: number | string;
 
   /**
    * 订单来源
@@ -252,7 +257,7 @@ export interface SalesOrderForm extends BaseEntity {
   /**
    * 结算账户id
    */
-  bankAccountId?: string | number;
+  bankAccountId?: number | string;
 
   /**
    * 结算账户账号
@@ -294,6 +299,10 @@ export interface SalesOrderForm extends BaseEntity {
    */
   approvalTime?: string;
 
+  /**
+   * 销售订单明细列表
+   */
+  salesOrderItemList?: SalesOrderItemVO[];
 }
 
 export interface SalesOrderQuery extends PageQuery {
@@ -305,7 +314,7 @@ export interface SalesOrderQuery extends PageQuery {
   /**
    * 客户名称id
    */
-  customerId?: string | number;
+  customerId?: number | string;
 
   /**
    * 订单状态(字典 order_status)
@@ -315,12 +324,12 @@ export interface SalesOrderQuery extends PageQuery {
   /**
    * 部门id
    */
-  deptId?: string | number;
+  deptId?: number | string;
 
   /**
    * 销售人员
    */
-  salesPersonId?: string | number;
+  salesPersonId?: number | string;
 
   /**
    * 订单来源
@@ -395,7 +404,7 @@ export interface SalesOrderQuery extends PageQuery {
   /**
    * 结算账户id
    */
-  bankAccountId?: string | number;
+  bankAccountId?: number | string;
 
   /**
    * 结算账户账号

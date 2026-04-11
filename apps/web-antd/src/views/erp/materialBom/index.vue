@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { MaterialBomForm } from '#/api/erp/materialBom/model';
+
+import { ref } from 'vue';
 
 import { Page, useVbenModal } from '@vben/common-ui';
-import { Popconfirm, Space } from 'antdv-next';
+
+import { Button, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
@@ -11,11 +16,11 @@ import {
   materialBomList,
   materialBomRemove,
 } from '#/api/erp/materialBom';
-import type { MaterialBomForm } from '#/api/erp/materialBom/model';
+import BomTree from '#/components/BomTree/src/index.vue';
 import { useBlobExport } from '#/utils/file/export';
 
-import materialBomModal from './materialBom-modal.vue';
 import { columns, querySchema } from './data';
+import materialBomModal from './materialBom-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -79,19 +84,28 @@ const [MaterialBomModal, modalApi] = useVbenModal({
   connectedComponent: materialBomModal,
 });
 
+// BOM树状态
+const bomTreeVisible = ref(false);
+const currentBomId = ref('');
+
 function handleAdd() {
   modalApi.setData({});
   modalApi.open();
 }
 
-async function handleEdit(row: Required<MaterialBomForm>) {
-  modalApi.setData({ id: row.id });
+async function handleEdit(row: Required<MaterialBomForm>,isNewVersion?: boolean) {
+  modalApi.setData({ id: row.id ,isNewVersion});
   modalApi.open();
 }
 
 async function handleDelete(row: Required<MaterialBomForm>) {
   await materialBomRemove(row.id);
   await tableApi.query();
+}
+
+function handleView(row: Required<MaterialBomForm>) {
+  currentBomId.value = row.id;
+  bomTreeVisible.value = true;
 }
 
 function handleMultiDelete() {
@@ -150,13 +164,27 @@ async function handleExport() {
       </template>
       <template #action="{ row }">
         <Space>
+          <Button
+            v-access:code="['erp:materialBom:bomTree']"
+            @click.stop="handleView(row)"
+            variant="text"
+            color="green"
+          >
+             查看bom树
+          </Button>
           <action-button
             v-access:code="['erp:materialBom:edit']"
-            @click.stop="handleEdit(row)"
+            @click.stop="handleEdit(row,true)"
+          >
+             建立新版本
+          </action-button>
+          <action-button
+            v-access:code="['erp:materialBom:edit']"
+            @click.stop="handleEdit(row,false)"
           >
             {{ $t('pages.common.edit') }}
           </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
+          <!-- <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
             <action-button
               danger
               v-access:code="['erp:materialBom:remove']"
@@ -164,10 +192,11 @@ async function handleExport() {
             >
               {{ $t('pages.common.delete') }}
             </action-button>
-          </Popconfirm>
+          </Popconfirm> -->
         </Space>
       </template>
     </BasicTable>
     <MaterialBomModal @reload="tableApi.query()" />
+    <BomTree v-model:visible="bomTreeVisible" :bom-id="currentBomId" />
   </Page>
 </template>

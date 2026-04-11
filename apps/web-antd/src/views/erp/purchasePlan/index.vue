@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { PurchasePlanForm } from '#/api/erp/purchasePlan/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
+
 import { Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
@@ -11,15 +14,14 @@ import {
   purchasePlanList,
   purchasePlanRemove,
 } from '#/api/erp/purchasePlan';
-import type { PurchasePlanForm } from '#/api/erp/purchasePlan/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import purchasePlanModal from './purchasePlan-modal.vue';
 import { columns, querySchema } from './data';
+import purchasePlanModal from './purchasePlan-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 90,
     componentProps: {
       allowClear: true,
     },
@@ -80,12 +82,12 @@ const [PurchasePlanModal, modalApi] = useVbenModal({
 });
 
 function handleAdd() {
-  modalApi.setData({});
+  modalApi.setData({ viewMode: true });
   modalApi.open();
 }
 
 async function handleEdit(row: Required<PurchasePlanForm>) {
-  modalApi.setData({ id: row.id });
+  modalApi.setData({ id: row.id, viewMode: true });
   modalApi.open();
 }
 

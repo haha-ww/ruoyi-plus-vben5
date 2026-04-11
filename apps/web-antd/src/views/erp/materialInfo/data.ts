@@ -29,7 +29,7 @@ export const querySchema: FormSchemaGetter = () => [
   {
     component: 'TreeSelect',
     fieldName: 'categoryId',
-    label: '分类',
+    label: '物料分类',
     componentProps: {
       treeData: categoryList,
       showSearch: true,
@@ -120,7 +120,7 @@ export const columns: VxeGridProps['columns'] = [
   },
   {
     title: '计量单位',
-    field: 'unitId',
+    field: 'unitName',
     slots: {
       default: ({ row }) => {
         return row.unitName || row.unitId;

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { ProductionOrderForm } from '#/api/erp/productionOrder/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
+
 import { Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
@@ -11,15 +14,14 @@ import {
   productionOrderList,
   productionOrderRemove,
 } from '#/api/erp/productionOrder';
-import type { ProductionOrderForm } from '#/api/erp/productionOrder/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import productionOrderModal from './productionOrder-modal.vue';
 import { columns, querySchema } from './data';
+import productionOrderModal from './productionOrder-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 90,
     componentProps: {
       allowClear: true,
     },

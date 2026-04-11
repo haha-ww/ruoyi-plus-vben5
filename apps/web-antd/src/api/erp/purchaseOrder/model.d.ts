@@ -1,5 +1,7 @@
 import type { PageQuery, BaseEntity } from '#/api/common';
 
+import type { PurchaseOrderItemVO } from '#/api/erp/purchaseOrderItem/model';
+
 export interface PurchaseOrderVO {
   /**
    * 主键ID
@@ -100,6 +102,11 @@ export interface PurchaseOrderVO {
    * 审批时间
    */
   approvalTime: string;
+
+  /**
+   * 采购订单明细列表
+   */
+  purchaseOrderItemList?: PurchaseOrderItemVO[];
 
 }
 
@@ -203,6 +210,11 @@ export interface PurchaseOrderForm extends BaseEntity {
    * 审批时间
    */
   approvalTime?: string;
+
+  /**
+   * 采购订单明细列表
+   */
+  purchaseOrderItemList?: PurchaseOrderItemVO[];
 
 }
 

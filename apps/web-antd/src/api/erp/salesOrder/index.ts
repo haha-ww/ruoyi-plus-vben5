@@ -1,4 +1,4 @@
-import type { SalesOrderVO, SalesOrderForm, SalesOrderQuery } from './model';
+import type { SalesOrderForm, SalesOrderQuery, SalesOrderVO } from './model';
 
 import type { ID, IDS } from '#/api/common';
 import type { PageResult } from '#/api/common';
@@ -58,4 +58,22 @@ export function salesOrderUpdate(data: SalesOrderForm) {
  */
 export function salesOrderRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/salesOrder/${id}`);
+}
+
+/**
+ * 审批销售订单
+ * @param id id
+ * @returns void
+ */
+export function salesOrderApprove(data?: SalesOrderForm) {
+  return alovaInstance.putWithMsg<void>(`/erp/salesOrder/approval`, data);
+}
+
+/**
+ * 反审批销售订单
+ * @param id id
+ * @returns void
+ */
+export function salesOrderUnApprove(data?: SalesOrderForm) {
+  return alovaInstance.putWithMsg<void>(`/erp/salesOrder/reverseApproval`, data);
 }

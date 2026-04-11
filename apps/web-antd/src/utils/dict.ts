@@ -14,7 +14,6 @@ import { useDictStore } from '#/store/dict';
 export function getDictOptions(dictName: string, formatNumber = false) {
   const { dictRequestCache, setDictInfo, getDictOptions } = useDictStore();
   const dataList = getDictOptions(dictName);
-
   // 检查请求状态缓存
   if (dataList.length === 0 && !dictRequestCache.has(dictName)) {
     dictRequestCache.set(

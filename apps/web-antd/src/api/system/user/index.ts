@@ -177,3 +177,10 @@ export function listUserByDeptId(deptId: ID) {
 export function getDeptUserTree() {
   return alovaInstance.get<DeptTree[]>(Api.deptUserTree);
 }
+
+/**
+ * 查询部门下拉树结构
+ */
+export function deptTreeSelect  () {
+  return alovaInstance.get<DeptTree[]>('/system/user/deptTree');
+};

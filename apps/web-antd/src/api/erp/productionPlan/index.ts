@@ -59,3 +59,10 @@ export function productionPlanUpdate(data: ProductionPlanForm) {
 export function productionPlanRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/productionPlan/${id}`);
 }
+
+/**
+ * 更新生产计划时间（甘特图拖拽）
+ */
+export function productionPlanUpdateTime(data: { id: ID; planStartTime: string; planEndTime: string }) {
+  return alovaInstance.putWithMsg<void>('/erp/productionPlan/updateTime', data);
+}

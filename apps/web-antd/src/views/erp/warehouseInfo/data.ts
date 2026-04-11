@@ -1,6 +1,8 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import { getDictOptions } from '#/utils/dict';
+import { renderDict } from '#/utils/render';
 
 export const querySchema: FormSchemaGetter = () => [
   {
@@ -16,30 +18,17 @@ export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Select',
     componentProps: {
+      // 可选从DictEnum中获取 DictEnum.WAREHOUSE_TYPE 便于维护
+      options: getDictOptions('warehouse_type'),
     },
     fieldName: 'warehouseType',
-    label: '仓库类型(字典 warehouse_type)',
+    label: '仓库类型',
   },
   {
-    component: 'Input',
-    fieldName: 'location',
-    label: '仓库地址',
-  },
-  {
-    component: 'Input',
-    fieldName: 'userId',
-    label: '负责人',
-  },
-  {
-    component: 'Input',
-    fieldName: 'orderNum',
-    label: '显示顺序',
-  },
-  {
-    component: 'RadioGroup',
+    component: 'Select',
     componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
+      // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
+      options: getDictOptions('sys_normal_disable'),
     },
     fieldName: 'status',
     label: '启用状态',
@@ -51,10 +40,6 @@ export const querySchema: FormSchemaGetter = () => [
 export const columns: VxeGridProps['columns'] = [
   { type: 'checkbox', width: 60 },
   {
-    title: '仓库ID',
-    field: 'id',
-  },
-  {
     title: '仓库编码',
     field: 'warehouseCode',
   },
@@ -63,16 +48,18 @@ export const columns: VxeGridProps['columns'] = [
     field: 'warehouseName',
   },
   {
-    title: '仓库类型(字典 warehouse_type)',
+    title: '仓库类型',
     field: 'warehouseType',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.WAREHOUSE_TYPE 便于维护
+        return renderDict(row.warehouseType, 'warehouse_type');
+      },
+    },
   },
   {
     title: '仓库地址',
     field: 'location',
-  },
-  {
-    title: '负责人',
-    field: 'userId',
   },
   {
     title: '显示顺序',
@@ -81,6 +68,12 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '启用状态',
     field: 'status',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
+        return renderDict(row.status, 'sys_normal_disable');
+      },
+    },
   },
   {
     title: '备注',
@@ -95,60 +88,3 @@ export const columns: VxeGridProps['columns'] = [
   },
 ];
 
-export const modalSchema: FormSchemaGetter = () => [
-  {
-    label: '仓库ID',
-    fieldName: 'id',
-    component: 'Input',
-    dependencies: {
-      show: () => false,
-      triggerFields: [''],
-    },
-  },
-  {
-    label: '仓库编码',
-    fieldName: 'warehouseCode',
-    component: 'Input',
-  },
-  {
-    label: '仓库名称',
-    fieldName: 'warehouseName',
-    component: 'Input',
-  },
-  {
-    label: '仓库类型(字典 warehouse_type)',
-    fieldName: 'warehouseType',
-    component: 'Select',
-    componentProps: {
-    },
-  },
-  {
-    label: '仓库地址',
-    fieldName: 'location',
-    component: 'Input',
-  },
-  {
-    label: '负责人',
-    fieldName: 'userId',
-    component: 'Input',
-  },
-  {
-    label: '显示顺序',
-    fieldName: 'orderNum',
-    component: 'Input',
-  },
-  {
-    label: '启用状态',
-    fieldName: 'status',
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-  },
-  {
-    label: '备注',
-    fieldName: 'remark',
-    component: 'Textarea',
-  },
-];

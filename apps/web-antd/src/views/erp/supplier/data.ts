@@ -15,86 +15,9 @@ export const querySchema: FormSchemaGetter = () => [
   },
   {
     component: 'Input',
-    fieldName: 'shortName',
-    label: '简称',
-  },
-  {
-    component: 'Input',
+    labelWidth: '200px',
     fieldName: 'socialCommunicationCode',
     label: '统一社会信用代码',
-  },
-  {
-    component: 'Select',
-    componentProps: {
-    },
-    fieldName: 'type',
-    label: '供应商类型(字典 supplier_type)',
-  },
-  {
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-    fieldName: 'cooperationStatus',
-    label: '合作状态(字典 cooperation_status)',
-  },
-  {
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-    fieldName: 'succeedDate',
-    label: '成立时间',
-  },
-  {
-    component: 'Input',
-    fieldName: 'industry',
-    label: '所属行业',
-  },
-  {
-    component: 'Input',
-    fieldName: 'contactPerson',
-    label: '联系人',
-  },
-  {
-    component: 'Input',
-    fieldName: 'phone',
-    label: '联系电话',
-  },
-  {
-    component: 'Input',
-    fieldName: 'email',
-    label: '电子邮箱',
-  },
-  {
-    component: 'Input',
-    fieldName: 'address',
-    label: '联系地址',
-  },
-  {
-    component: 'Input',
-    fieldName: 'bank',
-    label: '开户行',
-  },
-  {
-    component: 'Input',
-    fieldName: 'bankCard',
-    label: '银行账号',
-  },
-  {
-    component: 'Input',
-    fieldName: 'bill',
-    label: '开票抬头',
-  },
-  {
-    component: 'Select',
-    componentProps: {
-    },
-    fieldName: 'settlementType',
-    label: '结算方式',
   },
 ];
 
@@ -102,10 +25,6 @@ export const querySchema: FormSchemaGetter = () => [
 // export const columns: () => VxeGridProps['columns'] = () => [
 export const columns: VxeGridProps['columns'] = [
   { type: 'checkbox', width: 60 },
-  {
-    title: '主键ID',
-    field: 'id',
-  },
   {
     title: '供应商编码',
     field: 'supplierCode',
@@ -123,52 +42,12 @@ export const columns: VxeGridProps['columns'] = [
     field: 'socialCommunicationCode',
   },
   {
-    title: '供应商类型(字典 supplier_type)',
-    field: 'type',
-  },
-  {
-    title: '合作状态(字典 cooperation_status)',
-    field: 'cooperationStatus',
-  },
-  {
-    title: '成立时间',
-    field: 'succeedDate',
-  },
-  {
-    title: '所属行业',
-    field: 'industry',
-  },
-  {
     title: '联系人',
     field: 'contactPerson',
   },
   {
     title: '联系电话',
     field: 'phone',
-  },
-  {
-    title: '电子邮箱',
-    field: 'email',
-  },
-  {
-    title: '联系地址',
-    field: 'address',
-  },
-  {
-    title: '开户行',
-    field: 'bank',
-  },
-  {
-    title: '银行账号',
-    field: 'bankCard',
-  },
-  {
-    title: '开票抬头',
-    field: 'bill',
-  },
-  {
-    title: '结算方式',
-    field: 'settlementType',
   },
   {
     title: '备注',
@@ -197,11 +76,16 @@ export const modalSchema: FormSchemaGetter = () => [
     label: '供应商编码',
     fieldName: 'supplierCode',
     component: 'Input',
+    disabled: true,
+    componentProps: {
+      placeholder: '系统自动生成',
+    },
   },
   {
     label: '供应商名称',
     fieldName: 'supplierName',
     component: 'Input',
+    rules: 'required'
   },
   {
     label: '简称',
@@ -214,29 +98,12 @@ export const modalSchema: FormSchemaGetter = () => [
     component: 'Input',
   },
   {
-    label: '供应商类型(字典 supplier_type)',
-    fieldName: 'type',
-    component: 'Select',
-    componentProps: {
-    },
-  },
-  {
-    label: '合作状态(字典 cooperation_status)',
-    fieldName: 'cooperationStatus',
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-  },
-  {
     label: '成立时间',
     fieldName: 'succeedDate',
     component: 'DatePicker',
     componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
+      format: 'YYYY-MM-DD',
+      valueFormat: 'YYYY-MM-DD',
     },
   },
   {
@@ -278,13 +145,6 @@ export const modalSchema: FormSchemaGetter = () => [
     label: '开票抬头',
     fieldName: 'bill',
     component: 'Input',
-  },
-  {
-    label: '结算方式',
-    fieldName: 'settlementType',
-    component: 'Select',
-    componentProps: {
-    },
   },
   {
     label: '备注',

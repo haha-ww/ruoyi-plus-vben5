@@ -59,3 +59,21 @@ export function purchaseOrderUpdate(data: PurchaseOrderForm) {
 export function purchaseOrderRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/purchaseOrder/${id}`);
 }
+
+/**
+ * 审批销售订单
+ * @param id id
+ * @returns void
+ */
+export function purchaseOrderApprove(data?: SalesOrderForm) {
+  return alovaInstance.putWithMsg<void>(`/erp/purchaseOrder/approval`, data);
+}
+
+/**
+ * 反审批销售订单
+ * @param id id
+ * @returns void
+ */
+export function purchaseOrderUnApprove(data?: SalesOrderForm) {
+  return alovaInstance.putWithMsg<void>(`/erp/purchaseOrder/reverseApproval`, data);
+}

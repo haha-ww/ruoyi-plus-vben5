@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { PurchaseOrderForm } from '#/api/erp/purchaseOrder/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
+
 import { Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
+  purchaseOrderApprove,
   purchaseOrderExport,
   purchaseOrderList,
   purchaseOrderRemove,
+  purchaseOrderUnApprove
 } from '#/api/erp/purchaseOrder';
-import type { PurchaseOrderForm } from '#/api/erp/purchaseOrder/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import purchaseOrderModal from './purchaseOrder-modal.vue';
 import { columns, querySchema } from './data';
+import purchaseOrderModal from './purchaseOrder-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -80,18 +84,45 @@ const [PurchaseOrderModal, modalApi] = useVbenModal({
 });
 
 function handleAdd() {
-  modalApi.setData({});
+  modalApi.setData({ viewMode: true});
   modalApi.open();
 }
 
 async function handleEdit(row: Required<PurchaseOrderForm>) {
-  modalApi.setData({ id: row.id });
+  modalApi.setData({ id: row.id , viewMode: true});
   modalApi.open();
 }
 
 async function handleDelete(row: Required<PurchaseOrderForm>) {
   await purchaseOrderRemove(row.id);
   await tableApi.query();
+}
+
+function handleView(row: Required<PurchaseOrderForm>) {
+  modalApi.setData({ id: row.id, viewMode: false });
+  modalApi.open();
+}
+
+async function handleApprove(row: Required<PurchaseOrderForm>) {
+  window.modal.confirm({
+    title: '提示',
+    content: '确认审批该采购订单吗？',
+    onOk: async () => {
+      await purchaseOrderApprove({id: row.id});
+      await tableApi.query();
+    },
+  });
+}
+
+async function handleUnApprove(row: Required<PurchaseOrderForm>) {
+  window.modal.confirm({
+    title: '提示',
+    content: '确认反审批该采购订单吗？',
+    onOk: async () => {
+      await purchaseOrderUnApprove({id: row.id});
+      await tableApi.query();
+    },
+  });
 }
 
 function handleMultiDelete() {
@@ -149,12 +180,35 @@ async function handleExport() {
         </Space>
       </template>
       <template #action="{ row }">
-        <Space>
+        <Space wrap>
           <action-button
+            v-access:code="['erp:purchaseOrder:view']"
+            @click.stop="handleView(row)"
+          >
+            查看
+          </action-button>
+          <action-button
+          v-if="row.orderStatus === 10"
             v-access:code="['erp:purchaseOrder:edit']"
             @click.stop="handleEdit(row)"
           >
             {{ $t('pages.common.edit') }}
+          </action-button>
+          <action-button
+          v-if="row.orderStatus === 20"
+            v-access:code="['erp:purchaseOrder:approve']"
+            @click.stop="handleApprove(row)"
+            color="green" variant="outlined"
+          >
+            审批
+          </action-button>
+          <action-button
+          v-if="row.orderStatus === 30"
+            v-access:code="['erp:purchaseOrder:unApprove']"
+            @click.stop="handleUnApprove(row)"
+            color="red" variant="outlined"
+          >
+            反审批
           </action-button>
           <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
             <action-button

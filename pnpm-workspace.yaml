@@ -41,6 +41,8 @@ catalog:
   '@ctrl/tinycolor': ^4.2.0
   '@eslint-community/eslint-plugin-eslint-comments': ^4.7.1
   '@eslint/js': ^10.0.1
+  '@iconify/icons-ri': ^1.2.10
+  '@iconify/icons-simple-icons': ^1.2.74
   '@iconify/json': ^2.2.451
   '@iconify/tailwind4': ^1.2.3
   '@iconify/vue': ^5.0.0
@@ -57,6 +59,7 @@ catalog:
   '@tinymce/tinymce-vue': ^6.0.1
   '@tsdown/css': ^0.21.4
   '@types/archiver': ^7.0.0
+  '@types/crypto-js': ^4.2.2
   '@types/html-minifier-terser': ^7.0.2
   '@types/json-bigint': ^1.0.4
   '@types/lodash-es': ^4.17.12
@@ -65,6 +68,7 @@ catalog:
   '@types/nprogress': ^0.2.3
   '@types/qrcode': ^1.5.6
   '@types/qs': ^6.15.0
+  '@types/sm-crypto': ^0.3.4
   '@types/sortablejs': ^1.15.9
   '@typescript-eslint/eslint-plugin': ^8.57.1
   '@typescript-eslint/parser': ^8.57.1
@@ -76,6 +80,7 @@ catalog:
   '@vueuse/core': ^14.2.1
   '@vueuse/integrations': ^14.2.1
   '@vueuse/motion': ^3.0.3
+  '@vxe-ui/plugin-render-antd': ^4.0.18
   alova: ^3.4.1
   ant-design-x-vue: ^1.6.0
   antdv-next: ^1.1.5
@@ -94,6 +99,7 @@ catalog:
   consola: ^3.4.2
   cropperjs: ^1.6.2
   cross-env: ^10.1.0
+  crypto-js: ^4.2.0
   cspell: ^9.7.0
   cz-git: ^1.12.0
   czg: ^1.12.0
@@ -115,12 +121,14 @@ catalog:
   eslint-plugin-vue: ^10.8.0
   eslint-plugin-yml: ^3.3.1
   execa: ^9.6.1
+  file-type: ^19.5.0
   find-up: ^8.0.0
   get-port: ^7.1.0
   globals: ^17.4.0
   happy-dom: ^20.8.4
   html-minifier-terser: ^7.2.0
   is-ci: ^4.1.0
+  jsencrypt: ^3.5.4
   json-bigint: ^1.0.0
   lefthook: ^2.1.4
   lodash-es: ^4.17.21
@@ -151,6 +159,7 @@ catalog:
   sass: ^1.98.0
   sass-embedded: ^1.98.0
   secure-ls: ^2.0.0
+  sm-crypto: ^0.3.13
   sortablejs: ^1.15.7
   stylelint: ^17.4.0
   stylelint-config-recess-order: ^7.7.0
