@@ -27,9 +27,8 @@ const formOptions: VbenFormProps = {
 };
 
 const gridOptions: VxeGridProps = {
-  checkboxConfig: {
+  radioConfig: {
     highlight: true,
-    reserve: true,
     trigger: 'row',
   },
   columns,
@@ -70,8 +69,8 @@ const [BasicModal, modalApi] = useVbenModal({
 });
 
 function handleConfirm() {
-  const rows = (tableApi.grid.getCheckboxRecords?.() ?? []) as MaterialInfoVO[];
-  emit('update:value', rows);
+  const record = tableApi.grid.getRadioRecord?.() as MaterialInfoVO | null;
+  emit('update:value', record ? [record] : []);
   modalApi.close();
 }
 

@@ -23,7 +23,7 @@ export const querySchema: FormSchemaGetter = () => [
  * 物料选择-表格列
  */
 export const columns: VxeGridProps['columns'] = [
-  { type: 'checkbox', width: 60 },
+  { type: 'radio', width: 60 },
   {
     title: '主键',
     field: 'id',

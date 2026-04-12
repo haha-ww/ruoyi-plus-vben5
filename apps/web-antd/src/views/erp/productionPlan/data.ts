@@ -1,6 +1,9 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import {ref} from 'vue'
+
+import {listMaterialSelect} from '#/api/wcommon';
 import { getDictOptions } from '#/utils/dict';
 import { renderDict } from '#/utils/render';
 // 来源类型选项
@@ -41,9 +44,15 @@ export const statusColorMap: Record<number, string> = {
   20: '#1677ff',
   30: '#fa8c16',
   40: '#52c41a',
-  50: '#8c8c8c',
+  50: '#f31313ff',
 };
-
+/**
+ * 查询物料下拉列表
+ */
+const materialOptions = ref<any[]>([]);
+listMaterialSelect().then((res) => {
+  materialOptions.value = res || [];
+});
 export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Input',
@@ -51,9 +60,16 @@ export const querySchema: FormSchemaGetter = () => [
     label: '计划单号',
   },
   {
-    component: 'Input',
+    component: 'Select',
+    componentProps: {
+      options: materialOptions,
+      fieldNames: {
+        label: 'materialName',
+        value: 'id',
+      },
+    },
     fieldName: 'materialId',
-    label: '产品名称/编码',
+    label: '产品名称',
   },
   {
     component: 'Select',
