@@ -66,3 +66,11 @@ export function productionPlanRemove(id: ID | IDS) {
 export function productionPlanUpdateTime(data: { id: ID; planStartTime: string; planEndTime: string }) {
   return alovaInstance.putWithMsg<void>('/erp/productionPlan/updateTime', data);
 }
+
+/**
+ * 从销售订单明细构建生产计划
+ * @param salesOrderItemIds 销售订单明细ID列表
+ */
+export function productionPlanBuildFromSalesOrder(salesOrderItemIds: (string | number)[]) {
+  return alovaInstance.postWithMsg<void>('/erp/productionPlan/buildFromSalesOrder', { salesOrderItemIds });
+}

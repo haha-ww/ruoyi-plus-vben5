@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { TechnologyRoutingForm } from '#/api/erp/technologyRouting/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
+
 import { Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
@@ -11,15 +14,14 @@ import {
   technologyRoutingList,
   technologyRoutingRemove,
 } from '#/api/erp/technologyRouting';
-import type { TechnologyRoutingForm } from '#/api/erp/technologyRouting/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import technologyRoutingModal from './technologyRouting-modal.vue';
 import { columns, querySchema } from './data';
+import technologyRoutingModal from './technologyRouting-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 90,
     componentProps: {
       allowClear: true,
     },
@@ -80,12 +82,17 @@ const [TechnologyRoutingModal, modalApi] = useVbenModal({
 });
 
 function handleAdd() {
-  modalApi.setData({});
+  modalApi.setData({ viewMode: true });
   modalApi.open();
 }
 
 async function handleEdit(row: Required<TechnologyRoutingForm>) {
-  modalApi.setData({ id: row.id });
+  modalApi.setData({ id: row.id, viewMode: true });
+  modalApi.open();
+}
+
+function handleView(row: Required<TechnologyRoutingForm>) {
+  modalApi.setData({ id: row.id, viewMode: false });
   modalApi.open();
 }
 
@@ -119,7 +126,7 @@ async function handleExport() {
 
 <template>
   <Page :auto-content-height="true">
-    <BasicTable table-title="erp-工艺路线列表">
+    <BasicTable table-title="工艺路线列表">
       <template #toolbar-tools>
         <Space>
           <a-button
@@ -150,6 +157,12 @@ async function handleExport() {
       </template>
       <template #action="{ row }">
         <Space>
+          <action-button
+            v-access:code="['erp:technologyRouting:query']"
+            @click.stop="handleView(row)"
+          >
+          详情
+          </action-button>
           <action-button
             v-access:code="['erp:technologyRouting:edit']"
             @click.stop="handleEdit(row)"

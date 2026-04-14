@@ -42,7 +42,9 @@ import { useBeforeCloseDiff } from '#/utils/popup';
 const emit = defineEmits<{ reload: [] }>();
 
 const isUpdate = ref(false);
+const viewMode = ref(false);
 const title = computed(() => {
+  if (!viewMode.value) return '详情';
   return isUpdate.value ? $t('pages.common.edit') : $t('pages.common.add');
 });
 
@@ -138,103 +140,108 @@ function handleRemoveRow(row: TechnologyRoutingOperationForm) {
   if (index !== -1) routingOpList.value.splice(index, 1);
 }
 
-const columns: TableColumnsType<TechnologyRoutingOperationForm> = [
-  {
-    title: '工序',
-    dataIndex: 'operationId',
-    width: 200,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <Select
-        options={operationOptions.value}
-        placeholder="请选择工序"
-        style={{ width: '100%' }}
-        v-model:value={record.operationId}
-        onChange={(val: any) => handleOperationChange(record, val)}
-      />
-    ),
-  },
-  {
-    title: '工序顺序',
-    dataIndex: 'sequence',
-    width: 100,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <InputNumber
-        min={1}
-        placeholder="顺序"
-        style={{ width: '100%' }}
-        v-model:value={record.sequence}
-        onChange={handleSequenceChange}
-      />
-    ),
-  },
-  {
-    title: '工作中心',
-    dataIndex: 'deptId',
-    width: 160,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <TreeSelect
-        allowClear
-        fieldNames={{ label: 'label', value: 'id', children: 'children' }}
-        placeholder="请选择"
-        style={{ width: '100%' }}
-        treeData={deptOptions.value}
-        treeDefaultExpandAll
-        v-model:value={record.deptId}
-      />
-    ),
-  },
-  {
-    title: '标准工价(元/件)',
-    dataIndex: 'wage',
-    width: 130,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.wage} />
-    ),
-  },
-  {
-    title: '废品工价(元)',
-    dataIndex: 'waste',
-    width: 120,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.waste} />
-    ),
-  },
-  {
-    title: '准备时间(小时)',
-    dataIndex: 'setupTime',
-    width: 130,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.setupTime} />
-    ),
-  },
-  {
-    title: '单件加工时间(小时)',
-    dataIndex: 'runTime',
-    width: 150,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.runTime} />
-    ),
-  },
-  {
-    title: '工序说明',
-    dataIndex: 'memo',
-    width: 160,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <Input placeholder="请输入" style={{ width: '100%' }} v-model:value={record.memo} />
-    ),
-  },
-  {
-    title: '操作',
-    key: 'action',
-    width: 80,
-    fixed: 'right' as const,
-    render: (_: any, record: TechnologyRoutingOperationForm) => (
-      <Button danger onClick={() => handleRemoveRow(record)} size="small">
-        删除
-      </Button>
-    ),
-  },
-];
+const columns = computed<TableColumnsType<TechnologyRoutingOperationForm>>(() => {
+  const base: TableColumnsType<TechnologyRoutingOperationForm> = [
+    {
+      title: '工序',
+      dataIndex: 'operationId',
+      width: 200,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <Select
+          options={operationOptions.value}
+          placeholder="请选择工序"
+          style={{ width: '100%' }}
+          v-model:value={record.operationId}
+          onChange={(val: any) => handleOperationChange(record, val)}
+        />
+      ),
+    },
+    {
+      title: '工序顺序',
+      dataIndex: 'sequence',
+      width: 100,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <InputNumber
+          min={1}
+          placeholder="顺序"
+          style={{ width: '100%' }}
+          v-model:value={record.sequence}
+          onChange={handleSequenceChange}
+        />
+      ),
+    },
+    {
+      title: '工作中心',
+      dataIndex: 'deptId',
+      width: 160,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <TreeSelect
+          allowClear
+          fieldNames={{ label: 'label', value: 'id', children: 'children' }}
+          placeholder="请选择"
+          style={{ width: '100%' }}
+          treeData={deptOptions.value}
+          treeDefaultExpandAll
+          v-model:value={record.deptId}
+        />
+      ),
+    },
+    {
+      title: '标准工价(元/件)',
+      dataIndex: 'wage',
+      width: 130,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.wage} />
+      ),
+    },
+    {
+      title: '废品工价(元)',
+      dataIndex: 'waste',
+      width: 120,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.waste} />
+      ),
+    },
+    {
+      title: '准备时间(小时)',
+      dataIndex: 'setupTime',
+      width: 130,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.setupTime} />
+      ),
+    },
+    {
+      title: '单件加工时间(小时)',
+      dataIndex: 'runTime',
+      width: 150,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.runTime} />
+      ),
+    },
+    {
+      title: '工序说明',
+      dataIndex: 'memo',
+      width: 160,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <Input placeholder="请输入" style={{ width: '100%' }} v-model:value={record.memo} />
+      ),
+    },
+  ];
+  if (viewMode.value) {
+    base.push({
+      title: '操作',
+      key: 'action',
+      width: 80,
+      fixed: 'right' as const,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <Button danger onClick={() => handleRemoveRow(record)} size="small">
+          删除
+        </Button>
+      ),
+    });
+  }
+  return base;
+});
 
 function customFormValueGetter() {
   return JSON.stringify({ ...formData.value, routingOpList: routingOpList.value });
@@ -257,8 +264,10 @@ const [BasicModal, modalApi] = useVbenModal({
     modalApi.modalLoading(true);
 
     await loadOptions();
-    const { id } = modalApi.getData() as { id?: number | string };
+    const { id, viewMode: isViewMode } = modalApi.getData() as { id?: number | string; viewMode?: boolean };
     isUpdate.value = !!id;
+    viewMode.value = !!isViewMode;
+    modalApi.setState({ showConfirmButton: viewMode.value });
 
     if (isUpdate.value && id) {
       const record = await technologyRoutingInfo(id);
@@ -310,7 +319,7 @@ async function handleClosed() {
 
 <template>
   <BasicModal :title="title">
-    <Form :label-col="{ span: 6 }" ref="formInstance" :model="formData">
+    <Form :label-col="{ span: 6 }" ref="formInstance" :model="formData" :disabled="!viewMode">
       <Divider :orientation="('left' as any)">基本信息</Divider>
       <Row :gutter="16">
         <Col :span="8">
@@ -349,7 +358,7 @@ async function handleClosed() {
       <Divider :orientation="('left' as any)">工艺路线明细</Divider>
       <div class="mb-3">
         <Space>
-          <a-button type="primary" @click="handleAddRow">新增行</a-button>
+          <a-button v-if="viewMode" type="primary" @click="handleAddRow">新增行</a-button>
         </Space>
       </div>
       <Table

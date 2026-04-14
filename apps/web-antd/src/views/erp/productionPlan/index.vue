@@ -3,6 +3,7 @@ import type { VbenFormProps } from '@vben/common-ui';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { ProductionPlanForm, ProductionPlanVO } from '#/api/erp/productionPlan/model';
+import type { SalesOrderItemVO } from '#/api/erp/salesOrderItem/model';
 
 import { ref } from 'vue';
 
@@ -12,10 +13,12 @@ import { Popconfirm, Progress, Space, TabPane, Tabs, Tag } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
+  productionPlanBuildFromSalesOrder,
   productionPlanExport,
   productionPlanList,
   productionPlanRemove,
 } from '#/api/erp/productionPlan';
+import { SelectSalesOrderItem } from '#/components/select-sales-order-item';
 import { useBlobExport } from '#/utils/file/export';
 
 import { columns, priorityOptions, querySchema, statusColorMap, statusOptions } from './data';
@@ -147,6 +150,22 @@ function handleReload() {
     loadGanttData();
   }
 }
+
+// 从销售订单构建
+const selectSalesOrderItemRef = ref<InstanceType<typeof SelectSalesOrderItem>>();
+const buildLoading = ref(false);
+
+async function handleBuildFromSalesOrder(rows: SalesOrderItemVO[]) {
+  if (rows.length === 0) return;
+  buildLoading.value = true;
+  try {
+    const ids = rows.map((r) => r.id);
+    await productionPlanBuildFromSalesOrder(ids);
+    await tableApi.query();
+  } finally {
+    buildLoading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -180,6 +199,13 @@ function handleReload() {
             @click="handleAdd"
           >
             {{ $t('pages.common.add') }}
+          </a-button>
+          <a-button
+            v-access:code="['erp:productionPlan:add']"
+            :loading="buildLoading"
+            @click="selectSalesOrderItemRef?.open()"
+          >
+            从销售订单构建
           </a-button>
           </Space>
       </template>
@@ -222,14 +248,14 @@ function handleReload() {
                 查看
               </action-button>
               <action-button
-                v-if="row.status === 10"
+                v-if="row.status == 1"
                 v-access:code="['erp:productionPlan:edit']"
                 @click.stop="handleEdit(row)"
               >
                 {{ $t('pages.common.edit') }}
               </action-button>
               <Popconfirm
-                v-if="row.status === 10"
+                v-if="row.status == 1"
                 placement="left"
                 title="确认删除？"
                 @confirm="handleDelete(row)"
@@ -263,6 +289,7 @@ function handleReload() {
     </Tabs>
 
     <ProductionPlanModal @reload="handleReload" />
+    <SelectSalesOrderItem ref="selectSalesOrderItemRef" :default-params="{ isPlan: false }" @update:value="handleBuildFromSalesOrder" />
   </Page>
 </template>
 

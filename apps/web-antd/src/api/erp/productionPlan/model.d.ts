@@ -37,6 +37,10 @@ export interface ProductionPlanVO {
   priority: string;
   /** 状态 10-草稿 20-已下达 30-生产中 40-已完成 50-已关闭 */
   status: number;
+  /** 工艺路线ID */
+  routingId: string | number;
+  /** 工艺路线名称 */
+  routingName: string;
   /** 备注 */
   remark: string;
 }
@@ -57,6 +61,8 @@ export interface ProductionPlanForm extends BaseEntity {
   principalId?: string | number;
   priority?: string;
   status?: number;
+  routingId?: string | number;
+  routingName?: string;
   remark?: string;
 }
 

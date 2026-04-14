@@ -8,9 +8,8 @@ import { getDictOptions } from '#/utils/dict';
 import { renderDict } from '#/utils/render';
 // 来源类型选项
 export const sourceTypeOptions = [
-  { label: '手动创建', value: '1' },
-  { label: '销售订单', value: '2' },
-  { label: 'MRP计划', value: '3' },
+  { label: '手动创建', value: '手动创建' },
+  { label: '销售订单', value: '销售订单' },
 ];
 
 // 优先级选项

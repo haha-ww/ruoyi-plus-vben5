@@ -35,10 +35,8 @@ export const querySchema: FormSchemaGetter = () => [
   },
 ];
 
-// 需要使用i18n注意这里要改成getter形式 否则切换语言不会刷新
-// export const columns: () => VxeGridProps['columns'] = () => [
 export const columns: VxeGridProps['columns'] = [
-  { type: 'checkbox', width: 60 },
+  { type: 'radio', width: 40 },
   {
     title: '工艺路线编码',
     field: 'routingCode',
@@ -55,7 +53,6 @@ export const columns: VxeGridProps['columns'] = [
     title: '物料编码',
     field: 'materialCode',
   },
-  
   {
     title: '工艺描述',
     field: 'routingDescribe',
@@ -65,7 +62,6 @@ export const columns: VxeGridProps['columns'] = [
     fixed: 'right',
     slots: { default: 'action' },
     title: '操作',
-    width: 240,
+    width: 80,
   },
 ];
-

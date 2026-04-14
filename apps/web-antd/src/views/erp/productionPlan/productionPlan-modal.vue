@@ -4,6 +4,8 @@ import type { Rule } from 'antdv-next/dist/form/types';
 
 import type { MaterialInfoVO } from '#/api/erp/materialInfo/model';
 import type { ProductionPlanForm } from '#/api/erp/productionPlan/model';
+import type { SalesOrderItemVO } from '#/api/erp/salesOrderItem/model';
+import type { TechnologyRoutingVO } from '#/api/erp/technologyRouting/model';
 
 import { computed, ref, watch } from 'vue';
 
@@ -29,6 +31,8 @@ import { deptTreeSelect } from '#/api/system/user';
 import { liststaffSelect } from '#/api/wcommon';
 import { DictTag } from '#/components/dict';
 import SelectMaterial from '#/components/select-material/src/index.vue';
+import SelectSalesOrderItem from '#/components/select-sales-order-item/src/index.vue';
+import SelectTechnologyRouting from '#/components/select-technology-routing/src/index.vue';
 import { getDictOptions } from '#/utils/dict';
 import { useBeforeCloseDiff } from '#/utils/popup';
 
@@ -59,8 +63,11 @@ const defaultValues: Partial<ProductionPlanForm> = {
   deptId: undefined,
   principalId: undefined,
   priority: '3',
-  status: 10,
+  status: 1,
+  routingId: undefined,
+  routingName: undefined,
   remark: undefined,
+  salesOrderCode: undefined,
 };
 
 const formData = ref<Partial<ProductionPlanForm>>({ ...defaultValues });
@@ -170,6 +177,33 @@ const selectBaseMaterialRef = ref<InstanceType<typeof SelectMaterial>>();
 function handleOpenSelectMaterial() {
   selectBaseMaterialRef.value?.open();
 }
+
+// 销售订单明细选择
+const selectSalesOrderItemRef = ref<InstanceType<typeof SelectSalesOrderItem>>();
+function handleSalesOrderItemSelect(rows: SalesOrderItemVO[]) {
+  if (rows.length === 0) return;
+  const item = rows[0] as SalesOrderItemVO & { materialCode?: string; materialId?: any; materialName?: string; };
+  formData.value.salesOrderId = item.id;
+  formData.value.salesOrderCode = item.orderCode;
+  formData.value.planEndTime = item.requiredDeliveryDate;
+  if (!formData.value.planQty && item.quantity) {
+    formData.value.planQty = item.quantity;
+  }
+  if (!formData.value.materialId && item.materialId) {
+    formData.value.materialId = item.materialId;
+    formData.value.materialName = (item as any).materialName;
+    formData.value.materialCode = (item as any).materialCode;
+  }
+}
+
+// 工艺路线选择
+const selectTechnologyRoutingRef = ref<InstanceType<typeof SelectTechnologyRouting>>();
+function handleTechnologyRoutingSelect(rows: TechnologyRoutingVO[]) {
+  const routing = rows[0];
+  if (!routing) return;
+  formData.value.routingId = routing.id;
+  formData.value.routingName = routing.routingName;
+}
 </script>
 
 <template>
@@ -188,12 +222,26 @@ function handleOpenSelectMaterial() {
             <Input v-model:value="formData.planCode" disabled placeholder="保存后自动生成" />
           </FormItem>
         </Col>
-        <!-- 状态 -->
+        <!-- 来源类型 -->
         <Col :span="12">
-          <FormItem label="状态">
-             <DictTag :dicts="getDictOptions('production_plan_type')" :value="formData.status" />
+          <FormItem label="来源类型" name="sourceType">
+            <Select
+              v-model:value="formData.sourceType"
+              :options="sourceTypeOptions"
+              :get-popup-container="getPopupContainer"
+              placeholder="请选择来源类型"
+            />
           </FormItem>
         </Col>
+        <!-- 关联销售单（来源=销售订单时显示） -->
+        <Col v-if="formData.sourceType === '销售订单'" :span="12">
+          <FormItem label="关联销售单" name="salesOrderCode">
+            <a-button type="link" @click="selectSalesOrderItemRef?.open()">
+              {{ formData.salesOrderCode || '选择销售订单明细' }}
+            </a-button>
+          </FormItem>
+        </Col>
+        
         <!-- 产品 -->
         <Col :span="12">
           <FormItem label="产品" name="materialId" :rules="formRules.materialId">
@@ -238,7 +286,7 @@ function handleOpenSelectMaterial() {
             <DatePicker
               v-model:value="formData.planStartTime"
               format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD"
               style="width: 100%"
             />
           </FormItem>
@@ -249,26 +297,18 @@ function handleOpenSelectMaterial() {
             <DatePicker
               v-model:value="formData.planEndTime"
               format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD"
               style="width: 100%"
             />
           </FormItem>
         </Col>
-        <!-- 来源类型 -->
+        
+        <!-- 工艺路线 -->
         <Col :span="12">
-          <FormItem label="来源类型" name="sourceType">
-            <Select
-              v-model:value="formData.sourceType"
-              :options="sourceTypeOptions"
-              :get-popup-container="getPopupContainer"
-              placeholder="请选择来源类型"
-            />
-          </FormItem>
-        </Col>
-        <!-- 关联销售单（来源=销售订单时显示） -->
-        <Col v-if="formData.sourceType === '2'" :span="12">
-          <FormItem label="关联销售单" name="salesOrderId">
-            <Input v-model:value="formData.salesOrderId" placeholder="请输入销售订单号" />
+          <FormItem label="工艺路线" name="routingId">
+            <a-button type="link" @click="selectTechnologyRoutingRef?.open()">
+              {{ formData.routingName || '选择工艺路线' }}
+            </a-button>
           </FormItem>
         </Col>
         <!-- 生产部门 -->
@@ -290,7 +330,7 @@ function handleOpenSelectMaterial() {
             <Select
               v-model:value="formData.principalId"
               :options="staffOptions"
-              :field-names="{ label: 'nickName', value: 'userId' }"
+              :field-names="{ label: 'name', value: 'id' }"
               :get-popup-container="getPopupContainer"
               allow-clear
               placeholder="请选择负责人"
@@ -308,6 +348,12 @@ function handleOpenSelectMaterial() {
             />
           </FormItem>
         </Col>
+        <!-- 状态 -->
+        <Col :span="12">
+          <FormItem label="状态">
+             <DictTag :dicts="getDictOptions('production_plan_type')" :value="formData.status" />
+          </FormItem>
+        </Col>
         <!-- 备注 -->
         <Col :span="24">
           <FormItem label="备注" name="remark" :label-col="{ span: 3 }" :wrapper-col="{ span: 21 }">
@@ -323,6 +369,16 @@ function handleOpenSelectMaterial() {
        ref="selectBaseMaterialRef"
               @update:value="(rows: MaterialInfoVO[]) => handleMaterialSelect(rows)"
             />
+      <SelectSalesOrderItem
+        ref="selectSalesOrderItemRef"
+        :default-params="{ isPlan: false }"
+        @update:value="handleSalesOrderItemSelect"
+      />
+      <SelectTechnologyRouting
+        ref="selectTechnologyRoutingRef"
+        :default-params="{ materialId: formData.materialId }"
+        @update:value="handleTechnologyRoutingSelect"
+      />
     </Form>
   </BasicModal>
 </template>

@@ -13,13 +13,8 @@ listMaterialSelect().then((res) => {
 export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Input',
-    fieldName: 'routingCode',
-    label: '工艺路线编码',
-  },
-  {
-    component: 'Input',
-    fieldName: 'routingName',
-    label: '工艺路线名称',
+    fieldName: 'orderCode',
+    label: '销售订单号',
   },
   {
     component: 'Select',
@@ -35,18 +30,16 @@ export const querySchema: FormSchemaGetter = () => [
   },
 ];
 
-// 需要使用i18n注意这里要改成getter形式 否则切换语言不会刷新
-// export const columns: () => VxeGridProps['columns'] = () => [
 export const columns: VxeGridProps['columns'] = [
-  { type: 'checkbox', width: 60 },
+  { type: 'checkbox', width: 50 },
   {
-    title: '工艺路线编码',
-    field: 'routingCode',
+    title: '销售订单号',
+    field: 'orderCode',
   },
   {
-    title: '工艺路线名称',
-    field: 'routingName',
-  },
+    title: '客户名称',
+    field: 'customerName',
+  },  
   {
     title: '物料名称',
     field: 'materialName',
@@ -55,17 +48,16 @@ export const columns: VxeGridProps['columns'] = [
     title: '物料编码',
     field: 'materialCode',
   },
-  
   {
-    title: '工艺描述',
-    field: 'routingDescribe',
+    title: '订单数量',
+    field: 'quantity',
   },
   {
-    field: 'action',
-    fixed: 'right',
-    slots: { default: 'action' },
-    title: '操作',
-    width: 240,
+    title: '要求交货日期',
+    field: 'requiredDeliveryDate',
+  },
+  {
+    title: '备注',
+    field: 'remark',
   },
 ];
-
