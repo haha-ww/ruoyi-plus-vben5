@@ -6,9 +6,9 @@ import type { FormInstance } from 'antdv-next';
 import type { TableColumnsType } from 'antdv-next';
 import type { Rule } from 'antdv-next/dist/form/types';
 
+import type { MaterialInfoVO } from '#/api/erp/materialInfo/model';
 import type { TechnologyRoutingForm } from '#/api/erp/technologyRouting/model';
 import type { TechnologyRoutingOperationForm } from '#/api/erp/technologyRoutingOperation/model';
-import type { MaterialInfoVO } from '#/api/erp/materialInfo/model';
 
 import { computed, ref } from 'vue';
 
@@ -33,8 +33,8 @@ import {
 } from 'antdv-next';
 import { pick } from 'lodash-es';
 
-import { technologyRoutingAdd, technologyRoutingInfo, technologyRoutingUpdate } from '#/api/erp/technologyRouting';
 import { technologyOperationList } from '#/api/erp/technologyOperation';
+import { technologyRoutingAdd, technologyRoutingInfo, technologyRoutingUpdate } from '#/api/erp/technologyRouting';
 import { deptTreeSelect } from '#/api/system/user';
 import SelectMaterial from '#/components/select-material/src/index.vue';
 import { useBeforeCloseDiff } from '#/utils/popup';
@@ -72,7 +72,7 @@ const formRules = ref<AntdFormRules<RoutingFormData>>({
 const formInstance = ref<FormInstance>();
 const selectMaterialRef = ref<InstanceType<typeof SelectMaterial>>();
 const routingOpList = ref<TechnologyRoutingOperationForm[]>([]);
-const operationOptions = ref<{ label: string; value: string | number; record?: any }[]>([]);
+const operationOptions = ref<{ label: string; record?: any; value: number | string; }[]>([]);
 const deptOptions = ref<any[]>([]);
 
 async function loadOptions() {
@@ -100,7 +100,7 @@ function handleMaterialSelect(rows: MaterialInfoVO[]) {
   formData.value.materialCode = selected.materialCode;
 }
 
-function handleOperationChange(row: TechnologyRoutingOperationForm, value: string | number) {
+function handleOperationChange(row: TechnologyRoutingOperationForm, value: number | string) {
   const op = operationOptions.value.find((o) => o.value === value);
   if (op?.record) {
     row.operationCode = op.record.operationCode;
@@ -136,7 +136,7 @@ function handleAddRow() {
 }
 
 function handleRemoveRow(row: TechnologyRoutingOperationForm) {
-  const index = routingOpList.value.findIndex((item) => item === row);
+  const index = routingOpList.value.indexOf(row);
   if (index !== -1) routingOpList.value.splice(index, 1);
 }
 
@@ -148,25 +148,25 @@ const columns = computed<TableColumnsType<TechnologyRoutingOperationForm>>(() =>
       width: 200,
       render: (_: any, record: TechnologyRoutingOperationForm) => (
         <Select
+          onChange={(val: any) => handleOperationChange(record, val)}
           options={operationOptions.value}
           placeholder="请选择工序"
           style={{ width: '100%' }}
           v-model:value={record.operationId}
-          onChange={(val: any) => handleOperationChange(record, val)}
         />
       ),
     },
     {
       title: '工序顺序',
       dataIndex: 'sequence',
-      width: 100,
+      width: 60,
       render: (_: any, record: TechnologyRoutingOperationForm) => (
         <InputNumber
           min={1}
+          onChange={handleSequenceChange}
           placeholder="顺序"
           style={{ width: '100%' }}
           v-model:value={record.sequence}
-          onChange={handleSequenceChange}
         />
       ),
     },
@@ -189,7 +189,7 @@ const columns = computed<TableColumnsType<TechnologyRoutingOperationForm>>(() =>
     {
       title: '标准工价(元/件)',
       dataIndex: 'wage',
-      width: 130,
+      width: 100,
       render: (_: any, record: TechnologyRoutingOperationForm) => (
         <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.wage} />
       ),
@@ -197,7 +197,7 @@ const columns = computed<TableColumnsType<TechnologyRoutingOperationForm>>(() =>
     {
       title: '废品工价(元)',
       dataIndex: 'waste',
-      width: 120,
+      width: 100,
       render: (_: any, record: TechnologyRoutingOperationForm) => (
         <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.waste} />
       ),
@@ -205,7 +205,7 @@ const columns = computed<TableColumnsType<TechnologyRoutingOperationForm>>(() =>
     {
       title: '准备时间(小时)',
       dataIndex: 'setupTime',
-      width: 130,
+      width: 100,
       render: (_: any, record: TechnologyRoutingOperationForm) => (
         <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.setupTime} />
       ),
@@ -213,9 +213,17 @@ const columns = computed<TableColumnsType<TechnologyRoutingOperationForm>>(() =>
     {
       title: '单件加工时间(小时)',
       dataIndex: 'runTime',
-      width: 150,
+      width: 120,
       render: (_: any, record: TechnologyRoutingOperationForm) => (
         <InputNumber min={0} placeholder="请输入" precision={2} style={{ width: '100%' }} v-model:value={record.runTime} />
+      ),
+    },
+    {
+      title: '是否外协加工',
+      dataIndex: 'isOutsource',
+      width: 80,
+      render: (_: any, record: TechnologyRoutingOperationForm) => (
+        <Select options={[{ value: true, label: '是' }, { value: false, label: '否' }]} style={{ width: '100%' }} v-model:checked={record.isOutsource}/>
       ),
     },
     {
@@ -320,7 +328,7 @@ async function handleClosed() {
 <template>
   <BasicModal :title="title">
     <Form :label-col="{ span: 6 }" ref="formInstance" :model="formData" :disabled="!viewMode">
-      <Divider :orientation="('left' as any)">基本信息</Divider>
+      <Divider :orientation="'left' as any">基本信息</Divider>
       <Row :gutter="16">
         <Col :span="8">
           <FormItem label="工艺路线编码" name="routingCode">
@@ -355,7 +363,7 @@ async function handleClosed() {
         </Col>
       </Row>
 
-      <Divider :orientation="('left' as any)">工艺路线明细</Divider>
+      <Divider :orientation="'left' as any">工艺路线明细</Divider>
       <div class="mb-3">
         <Space>
           <a-button v-if="viewMode" type="primary" @click="handleAddRow">新增行</a-button>

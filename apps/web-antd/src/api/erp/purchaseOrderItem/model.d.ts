@@ -12,9 +12,39 @@ export interface PurchaseOrderItemVO {
   orderId: string | number;
 
   /**
+   * 采购订单编码
+   */
+  purchaseCode?: string;
+
+  /**
+   * 供应商名称
+   */
+  supplierName?: string;
+
+  /**
    * 物料id
    */
   materialId: string | number;
+
+  /**
+   * 物料名称
+   */
+  materialName?: string;
+
+  /**
+   * 物料编码
+   */
+  materialCode?: string;
+
+  /**
+   * 规格型号
+   */
+  spec?: string;
+
+  /**
+   * 物料单位
+   */
+  unit?: string;
 
   /**
    * 采购数量
@@ -131,6 +161,16 @@ export interface PurchaseOrderItemQuery extends PageQuery {
    * 采购订单ID
    */
   orderId?: string | number;
+
+  /**
+   * 采购订单编码
+   */
+  purchaseCode?: string;
+
+  /**
+   * 供应商id
+   */
+  supplierId?: string | number;
 
   /**
    * 物料id

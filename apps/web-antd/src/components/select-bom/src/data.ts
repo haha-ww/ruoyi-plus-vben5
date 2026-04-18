@@ -1,9 +1,16 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import { ref } from 'vue';
+
 import { listMaterialSelect } from '#/api/wcommon';
 import { renderDict } from '#/utils/render';
 
+
+const materialOptions = ref<any[]>([]);
+listMaterialSelect().then((res) => {
+  materialOptions.value = res || [];
+});
 /**
  * bom选择-查询表单
  * 搜索条件：bom名称、bom编码、物料名称（下拉 -> materialId）
@@ -25,14 +32,7 @@ export const querySchema: FormSchemaGetter = () => [
     label: '物料名称',
     componentProps: {
       allowClear: true,
-      options: async () => {
-        const res = await listMaterialSelect();
-        // 兼容后端不同返回结构：数组 或 { data: [] }
-        if (Array.isArray(res)) {
-          return res;
-        }
-        return (res as any)?.data ?? [];
-      },
+      options: materialOptions,
       fieldNames: {
         label: 'materialName',
         value: 'id',
@@ -45,7 +45,7 @@ export const querySchema: FormSchemaGetter = () => [
  * bom选择-表格列
  */
 export const columns: VxeGridProps['columns'] = [
-  { type: 'checkbox', width: 60 },
+  { type: 'radio', width: 60 },
   {
     title: '主键',
     field: 'id',

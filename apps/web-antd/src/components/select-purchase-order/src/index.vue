@@ -2,33 +2,36 @@
 import type { VbenFormProps } from '@vben/common-ui';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
-import type { MaterialBomVO } from '#/api/erp/materialBom/model';
+import type { PurchaseOrderItemVO } from '#/api/erp/purchaseOrderItem/model';
 
 import { useVbenModal } from '@vben/common-ui';
 
+import { Space } from 'antdv-next';
+
 import { useVbenVxeGrid } from '#/adapter/vxe-table';
-import { materialBomList } from '#/api/erp/materialBom';
+import { purchaseOrderItemList } from '#/api/erp/purchaseOrderItem';
 
 import { columns, querySchema } from './data';
 
 const props = defineProps<{
-  /** 预设查询参数，父组件可传入 routingCode / routingName / materialId 等 */
   defaultParams?: Record<string, any>;
 }>();
+
 const emit = defineEmits(['update:value']);
+
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 90,
     componentProps: {
       allowClear: true,
     },
   },
   schema: querySchema(),
-  wrapperClass: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  wrapperClass: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
 };
 
 const gridOptions: VxeGridProps = {
-  radioConfig: {
+  checkboxConfig: {
     highlight: true,
     trigger: 'row',
   },
@@ -39,9 +42,11 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues = {}) => {
-        return await materialBomList({
+        return await purchaseOrderItemList({
           pageNum: page.currentPage,
           pageSize: page.pageSize,
+          remainQuantity: 0,
+          ...props.defaultParams,
           ...formValues,
         });
       },
@@ -50,36 +55,28 @@ const gridOptions: VxeGridProps = {
   rowConfig: {
     keyField: 'id',
   },
-  id: 'erp-materialBom-select-bom',
+  id: 'erp-purchaseOrder-select',
 };
 
 const [BasicTable, tableApi] = useVbenVxeGrid({
   formOptions,
   gridOptions,
-   gridEvents: {
-    ready: async () => {
-      if (props.defaultParams?.materialId) {
-        const vals = { materialId: props.defaultParams.materialId };
-        await tableApi.formApi.setValues(vals);
-        tableApi.formApi.setLatestSubmissionValues(vals);
-        await tableApi.query(vals);
-      } else {
-        await tableApi.query();
-      }
-    },
-  },
 });
 
 const [BasicModal, modalApi] = useVbenModal({
-  class: 'w-[900px]',
+  class: 'w-[1100px]',
   fullscreenButton: false,
   onConfirm: handleConfirm,
- 
+  onOpenChange: async (isOpen) => {
+    if (isOpen) {
+      await tableApi.grid.commitProxy('query');
+    }
+  },
 });
 
 function handleConfirm() {
-  const record = tableApi.grid.getRadioRecord?.() as MaterialBomVO | null;
-  emit('update:value', record);
+  const rows = tableApi.grid.getCheckboxRecords?.() as PurchaseOrderItemVO[];
+  emit('update:value', rows ?? []);
   modalApi.close();
 }
 
@@ -90,8 +87,8 @@ defineExpose({
 </script>
 
 <template>
-  <BasicModal title="BOM选择">
-    <BasicTable table-title="物料bom选择列表">
+  <BasicModal title="采购订单选择">
+    <BasicTable table-title="采购订单列表">
       <template #toolbar-tools>
         <Space>
           <a-button type="primary" @click="handleConfirm">确定</a-button>

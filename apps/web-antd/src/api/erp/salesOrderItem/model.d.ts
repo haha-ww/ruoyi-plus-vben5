@@ -12,9 +12,29 @@ export interface SalesOrderItemVO {
   orderId: string | number;
 
   /**
+   * 销售订单编码
+   */
+  orderCode?: string;
+
+  /**
+   * 客户名称
+   */
+  customerName?: string;
+
+  /**
    * 物料id
    */
   materialId: string | number;
+
+  /**
+   * 物料名称
+   */
+  materialName?: string;
+
+  /**
+   * 物料编码
+   */
+  materialCode?: string;
 
   /**
    * bomId

@@ -37,9 +37,34 @@ export interface ProductionOrderVO {
   materialId: string | number;
 
   /**
+   * 物料名称
+   */
+  materialName: string;
+
+  /**
+   * 物料编码
+   */
+  materialCode: string;
+
+  /**
    * bom版本号
    */
   bomVersion: string;
+
+  /**
+   * 工艺路线ID
+   */
+  routingId: string | number;
+
+  /**
+   * 工艺路线名称
+   */
+  routingName: string;
+
+  /**
+   * 工艺路线明细列表
+   */
+  routingOperationList: any[];
 
   /**
    * 生产计划id
@@ -155,9 +180,34 @@ export interface ProductionOrderForm extends BaseEntity {
   materialId?: string | number;
 
   /**
+   * 物料名称
+   */
+  materialName?: string;
+
+  /**
+   * 物料编码
+   */
+  materialCode?: string;
+
+  /**
    * bom版本号
    */
   bomVersion?: string;
+
+  /**
+   * 工艺路线ID
+   */
+  routingId?: string | number;
+
+  /**
+   * 工艺路线名称
+   */
+  routingName?: string;
+
+  /**
+   * 工艺路线明细列表
+   */
+  routingOperationList?: any[];
 
   /**
    * 生产计划id

@@ -1,25 +1,27 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { PurchaseInboundForm } from '#/api/erp/purchaseInbound/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
+
 import { Popconfirm, Space } from 'antdv-next';
 
-import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
+  purchaseInboundCancel,
   purchaseInboundExport,
   purchaseInboundList,
-  purchaseInboundRemove,
 } from '#/api/erp/purchaseInbound';
-import type { PurchaseInboundForm } from '#/api/erp/purchaseInbound/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import purchaseInboundModal from './purchaseInbound-modal.vue';
 import { columns, querySchema } from './data';
+import purchaseInboundModal from './purchaseInbound-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 100,
     componentProps: {
       allowClear: true,
     },
@@ -84,13 +86,13 @@ function handleAdd() {
   modalApi.open();
 }
 
-async function handleEdit(row: Required<PurchaseInboundForm>) {
-  modalApi.setData({ id: row.id });
+async function handleView(row: Required<PurchaseInboundForm>) {
+  modalApi.setData({ id: row.id, viewMode: false });
   modalApi.open();
 }
 
 async function handleDelete(row: Required<PurchaseInboundForm>) {
-  await purchaseInboundRemove(row.id);
+  await purchaseInboundCancel(row.id);
   await tableApi.query();
 }
 
@@ -100,9 +102,9 @@ function handleMultiDelete() {
   window.modal.confirm({
     title: '提示',
     okType: 'danger',
-    content: `确认删除选中的${ids.length}条记录吗？`,
+    content: `确认作废选中的${ids.length}条记录吗？库存将回退`,
     onOk: async () => {
-      await purchaseInboundRemove(ids);
+      await purchaseInboundCancel(ids);
       await tableApi.query();
     },
   });
@@ -131,15 +133,6 @@ async function handleExport() {
             {{ $t('pages.common.export') }}
           </a-button>
           <a-button
-            :disabled="!vxeCheckboxChecked(tableApi)"
-            danger
-            type="primary"
-            v-access:code="['erp:purchaseInbound:remove']"
-            @click="handleMultiDelete"
-          >
-            {{ $t('pages.common.delete') }}
-          </a-button>
-          <a-button
             type="primary"
             v-access:code="['erp:purchaseInbound:add']"
             @click="handleAdd"
@@ -151,18 +144,17 @@ async function handleExport() {
       <template #action="{ row }">
         <Space>
           <action-button
-            v-access:code="['erp:purchaseInbound:edit']"
-            @click.stop="handleEdit(row)"
+            @click.stop="handleView(row)"
           >
-            {{ $t('pages.common.edit') }}
+            详情
           </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
+          <Popconfirm placement="left" title="确认作废吗？库存将回退" @confirm="handleDelete(row)">
             <action-button
               danger
-              v-access:code="['erp:purchaseInbound:remove']"
+              v-access:code="['erp:purchaseInbound:cancel']"
               @click.stop=""
             >
-              {{ $t('pages.common.delete') }}
+              作废
             </action-button>
           </Popconfirm>
         </Space>

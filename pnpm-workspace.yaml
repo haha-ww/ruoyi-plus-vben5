@@ -49,6 +49,9 @@ catalog:
   '@intlify/core-base': ^11.3.0
   '@intlify/unplugin-vue-i18n': ^11.0.7
   '@jspm/generator': ^2.12.0
+  '@logicflow/core': ^2.1.11
+  '@logicflow/extension': ^2.1.15
+  '@logicflow/layout': ^2.0.11
   '@manypkg/get-packages': ^3.1.0
   '@playwright/test': ^1.58.2
   '@pnpm/workspace.read-manifest': ^1000.3.0
@@ -106,6 +109,7 @@ catalog:
   dayjs: ^1.11.20
   defu: ^6.1.4
   depcheck: ^1.4.7
+  dhtmlx-gantt: ^9.1.3
   dotenv: ^17.3.1
   echarts: ^6.0.0
   es-toolkit: ^1.45.1

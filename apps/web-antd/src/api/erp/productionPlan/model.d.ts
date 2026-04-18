@@ -41,6 +41,10 @@ export interface ProductionPlanVO {
   routingId: string | number;
   /** 工艺路线名称 */
   routingName: string;
+  /** BOM版本ID */
+  bomId: string | number;
+  /** BOM版本名称 */
+  bomName: string;
   /** 备注 */
   remark: string;
 }
@@ -63,11 +67,14 @@ export interface ProductionPlanForm extends BaseEntity {
   status?: number;
   routingId?: string | number;
   routingName?: string;
+  bomId?: string | number;
+  bomName?: string;
   remark?: string;
 }
 
 export interface ProductionPlanQuery extends PageQuery {
   planCode?: string;
+  salesOrderCode?: string;
   materialId?: string | number;
   sourceType?: string;
   priority?: string;

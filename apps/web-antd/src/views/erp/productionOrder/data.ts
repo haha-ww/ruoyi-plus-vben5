@@ -72,20 +72,6 @@ export const columns: VxeGridProps['columns'] = [
     title: '生产订单编码',
     field: 'orderCode',
   },
-  {
-    title: '生产类型',
-    field: 'productionType',
-    slots: {
-      default: ({ row }) => {
-        // 可选从DictEnum中获取 DictEnum.PRODUCTION_TYPE 便于维护
-        return renderDict(row.productionType, 'production_type');
-      },
-    },
-  },
-  {
-    title: '工厂/车间',
-    field: 'deptId',
-  },
   
   {
     title: '物料名称',

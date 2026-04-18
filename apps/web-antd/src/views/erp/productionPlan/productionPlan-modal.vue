@@ -22,7 +22,6 @@ import {
   Row,
   Select,
   TextArea,
-  TreeSelect,
 } from 'antdv-next';
 import { pick } from 'lodash-es';
 
@@ -30,6 +29,7 @@ import { productionPlanAdd, productionPlanInfo, productionPlanUpdate } from '#/a
 import { deptTreeSelect } from '#/api/system/user';
 import { liststaffSelect } from '#/api/wcommon';
 import { DictTag } from '#/components/dict';
+import SelectBom from '#/components/select-bom/src/index.vue'
 import SelectMaterial from '#/components/select-material/src/index.vue';
 import SelectSalesOrderItem from '#/components/select-sales-order-item/src/index.vue';
 import SelectTechnologyRouting from '#/components/select-technology-routing/src/index.vue';
@@ -58,7 +58,7 @@ const defaultValues: Partial<ProductionPlanForm> = {
   actualQty: undefined,
   planStartTime: undefined,
   planEndTime: undefined,
-  sourceType: '1',
+  sourceType: '手动创建',
   salesOrderId: undefined,
   deptId: undefined,
   principalId: undefined,
@@ -66,8 +66,13 @@ const defaultValues: Partial<ProductionPlanForm> = {
   status: 1,
   routingId: undefined,
   routingName: undefined,
+  bomId: undefined,
+  bomName: undefined,
   remark: undefined,
   salesOrderCode: undefined,
+  bomId: undefined,
+  routingName: undefined,
+  bomVersion: undefined,
 };
 
 const formData = ref<Partial<ProductionPlanForm>>({ ...defaultValues });
@@ -204,6 +209,14 @@ function handleTechnologyRoutingSelect(rows: TechnologyRoutingVO[]) {
   formData.value.routingId = routing.id;
   formData.value.routingName = routing.routingName;
 }
+
+// BOM选择
+const selectBomRef = ref<InstanceType<typeof SelectBom>>();
+function handleBomSelect(bom: any) {
+  if (!bom) return;
+  formData.value.bomId = bom.id;
+  formData.value.bomVersion = bom.version;
+}
 </script>
 
 <template>
@@ -256,6 +269,14 @@ function handleTechnologyRoutingSelect(rows: TechnologyRoutingVO[]) {
             <Input v-model:value="formData.materialCode" disabled />
           </FormItem>
         </Col>
+         <!-- BOM版本 -->
+        <Col :span="12">
+          <FormItem label="BOM版本" name="bomVersion">
+            <a-button type="link" @click="selectBomRef?.open()">
+              {{ formData.bomVersion || '选择BOM版本' }}
+            </a-button>
+          </FormItem>
+        </Col>
         <!-- 计划数量 -->
         <Col :span="12">
           <FormItem label="计划数量" name="planQty" :rules="formRules.planQty">
@@ -303,38 +324,14 @@ function handleTechnologyRoutingSelect(rows: TechnologyRoutingVO[]) {
           </FormItem>
         </Col>
         
+       
+        
         <!-- 工艺路线 -->
         <Col :span="12">
           <FormItem label="工艺路线" name="routingId">
             <a-button type="link" @click="selectTechnologyRoutingRef?.open()">
               {{ formData.routingName || '选择工艺路线' }}
             </a-button>
-          </FormItem>
-        </Col>
-        <!-- 生产部门 -->
-        <Col :span="12">
-          <FormItem label="生产部门" name="deptId">
-            <TreeSelect
-              v-model:value="formData.deptId"
-              :tree-data="deptOptions"
-              :field-names="{ label: 'label', value: 'id', children: 'children' }"
-              :get-popup-container="getPopupContainer"
-              allow-clear
-              placeholder="请选择生产部门"
-            />
-          </FormItem>
-        </Col>
-        <!-- 负责人 -->
-        <Col :span="12">
-          <FormItem label="负责人" name="principalId">
-            <Select
-              v-model:value="formData.principalId"
-              :options="staffOptions"
-              :field-names="{ label: 'name', value: 'id' }"
-              :get-popup-container="getPopupContainer"
-              allow-clear
-              placeholder="请选择负责人"
-            />
           </FormItem>
         </Col>
         <!-- 优先级 -->
@@ -378,6 +375,11 @@ function handleTechnologyRoutingSelect(rows: TechnologyRoutingVO[]) {
         ref="selectTechnologyRoutingRef"
         :default-params="{ materialId: formData.materialId }"
         @update:value="handleTechnologyRoutingSelect"
+      />
+      <SelectBom
+        ref="selectBomRef"
+        :default-params="{ materialId: formData.materialId }"
+        @update:value="handleBomSelect"
       />
     </Form>
   </BasicModal>

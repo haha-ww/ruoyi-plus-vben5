@@ -59,3 +59,7 @@ export function purchaseInboundUpdate(data: PurchaseInboundForm) {
 export function purchaseInboundRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/purchaseInbound/${id}`);
 }
+
+export function purchaseInboundCancel(id: ID | IDS) {
+  return alovaInstance.putWithMsg<void>(`/erp/purchaseInbound/cancel/${id}`);
+}
