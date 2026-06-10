@@ -16,7 +16,6 @@ import { cloneDeep } from '@vben/utils';
 import {
   Button,
   Col,
-  DatePicker,
   Divider,
   Form,
   FormItem,
@@ -24,6 +23,7 @@ import {
   InputNumber,
   Row,
   Select,
+  Space,
   Table,
   TextArea,
   TreeSelect,
@@ -31,11 +31,12 @@ import {
 import dayjs from 'dayjs';
 import { pick } from 'lodash-es';
 
-import { materialOutboundOrderInfo, materialOutboundOrderOutbound } from '#/api/erp/materialOutboundOrder';
+import { materialOutboundOrderAdd, materialOutboundOrderInfo, materialOutboundOrderUpdate } from '#/api/erp/materialOutboundOrder';
 import { warehouseInventoryList } from '#/api/erp/warehouseInventory';
 import { deptTreeSelect } from '#/api/system/user';
 import { liststaffSelect, listWarehouseSelect } from '#/api/wcommon';
 import SelectMaterial from '#/components/select-material/src/index.vue';
+import SelectProductionOrder from '#/components/select-production-order/src/index.vue';
 import { useBeforeCloseDiff } from '#/utils/popup';
 
 interface MaterialOutboundOrderItemRow {
@@ -67,13 +68,16 @@ const defaultValues: Partial<MaterialOutboundOrderForm> = {
   outboundOrderCode: undefined,
   deptId: undefined,
   picker: undefined,
-  outboundDate: dayjs().format('YYYY-MM-DD'),
+  outboundDate: undefined,
   remark: undefined,
+  productionOrderId: undefined,
+  productionOrderCode: undefined,
 };
 
 const formData = ref<Partial<MaterialOutboundOrderForm>>({ ...defaultValues });
 const formInstance = ref<FormInstance>();
 const selectMaterialRef = ref<InstanceType<typeof SelectMaterial>>();
+const selectProductionOrderRef = ref<InstanceType<typeof SelectProductionOrder>>();
 const currentEditRow = ref<MaterialOutboundOrderItemRow | null>(null);
 const outboundItemList = ref<MaterialOutboundOrderItemRow[]>([]);
 
@@ -146,6 +150,17 @@ function handleMaterialSelect(rows: MaterialInfoVO[]) {
     currentEditRow.value.materialCode = selected.materialCode;
     currentEditRow.value.model = selected.model;
     loadCurrentQty(currentEditRow.value);
+  }
+}
+
+function handleOpenSelectProductionOrder() {
+  selectProductionOrderRef.value?.open();
+}
+
+function handleProductionOrderSelect(order: any) {
+  if (order) {
+    formData.value.productionOrderId = order.id;
+    formData.value.productionOrderCode = order.orderCode;
   }
 }
 
@@ -239,6 +254,17 @@ const columns: TableColumnsType<MaterialOutboundOrderItemRow> = [
     key: 'currentQty',
     width: 100,
   },
+  {
+    title: '操作',
+    key: 'action',
+    width: 80,
+    fixed: 'right' as const,
+    render: (_: any, record: MaterialOutboundOrderItemRow) => (
+      <Button danger onClick={() => handleRemoveRow(record)} size="small">
+        删除
+      </Button>
+    ),
+  },
 ];
 
 const [BasicModal, modalApi] = useVbenModal({
@@ -294,14 +320,10 @@ async function handleConfirm() {
         alert({ content: `第${i + 1}行领料数量必须大于0`, icon: 'warning' });
         return;
       }
-      if (!row.warehouseId) {
-        alert({ content: `第${i + 1}行发料仓库不能为空`, icon: 'warning' });
-        return;
-      }
     }
     const data = cloneDeep(formData.value) as MaterialOutboundOrderForm;
     (data as any).itemList = outboundItemList.value as MaterialOutboundOrderItemVO[];
-    await materialOutboundOrderOutbound(data);
+    await (isUpdate.value ? materialOutboundOrderUpdate(data) : materialOutboundOrderAdd(data));
     resetInitialized();
     emit('reload');
     modalApi.close();
@@ -327,8 +349,15 @@ async function handleClosed() {
       <Divider orientation="left">基本信息</Divider>
       <Row :gutter="24">
         <Col :span="8">
-          <FormItem label="出库单号" name="outboundOrderCode">
+          <FormItem label="领料单号" name="outboundOrderCode">
             <Input v-model:value="formData.outboundOrderCode" placeholder="系统自动生成" disabled />
+          </FormItem>
+        </Col>
+        <Col :span="8">
+          <FormItem label="生产订单" name="productionOrderCode">
+            <Button @click="handleOpenSelectProductionOrder" type="link" size="large" style="width: 100%; text-align: left;">
+              {{ formData.productionOrderCode || '请选择' }}
+            </Button>
           </FormItem>
         </Col>
         <Col :span="8">
@@ -357,16 +386,6 @@ async function handleClosed() {
             />
           </FormItem>
         </Col>
-        <Col :span="8">
-          <FormItem label="出库日期" name="outboundDate">
-            <DatePicker
-              v-model:value="formData.outboundDate"
-              format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            />
-          </FormItem>
-        </Col>
         <Col :span="16">
           <FormItem label="备注" name="remark">
             <TextArea v-model:value="formData.remark" :rows="2" placeholder="请输入备注" />
@@ -376,6 +395,9 @@ async function handleClosed() {
 
       <Divider orientation="left">领料出库明细</Divider>
       <div class="mb-3 ml-10">
+        <Space>
+          <Button v-if="!viewMode" type="primary" @click="handleAddRow">新增行</Button>
+        </Space>
       </div>
       <Table
         :columns="columns"
@@ -390,6 +412,10 @@ async function handleClosed() {
     <SelectMaterial
       ref="selectMaterialRef"
       @update:value="(rows: MaterialInfoVO[]) => handleMaterialSelect(rows)"
+    />
+    <SelectProductionOrder
+      ref="selectProductionOrderRef"
+      @update:value="handleProductionOrderSelect"
     />
   </BasicModal>
 </template>

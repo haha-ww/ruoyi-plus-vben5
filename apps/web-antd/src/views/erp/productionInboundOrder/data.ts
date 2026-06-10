@@ -9,9 +9,14 @@ export const querySchema: FormSchemaGetter = () => [
     label: '生产入库单编码',
   },
   {
-    component: 'Input',
+    component: 'TreeSelect',
     fieldName: 'deptId',
-    label: '入库部门id',
+    label: '入库部门',
+    componentProps: {
+      params: {},
+      placeholder: '请选择',
+      allowClear: true,
+    },
   },
   {
     component: 'Input',
@@ -35,20 +40,16 @@ export const querySchema: FormSchemaGetter = () => [
 export const columns: VxeGridProps['columns'] = [
   { type: 'checkbox', width: 60 },
   {
-    title: '主键ID',
-    field: 'id',
-  },
-  {
     title: '生产入库单编码',
     field: 'inboundOrderCode',
   },
   {
-    title: '入库部门id',
-    field: 'deptId',
+    title: '入库部门',
+    field: 'deptName',
   },
   {
     title: '入库负责人',
-    field: 'inboundResponsiblePerson',
+    field: 'inboundResponsiblePersonName',
   },
   {
     title: '入库日期',
@@ -63,48 +64,7 @@ export const columns: VxeGridProps['columns'] = [
     fixed: 'right',
     slots: { default: 'action' },
     title: '操作',
-    width: 180,
+    width: 80,
   },
 ];
 
-export const modalSchema: FormSchemaGetter = () => [
-  {
-    label: '主键ID',
-    fieldName: 'id',
-    component: 'Input',
-    dependencies: {
-      show: () => false,
-      triggerFields: [''],
-    },
-  },
-  {
-    label: '生产入库单编码',
-    fieldName: 'inboundOrderCode',
-    component: 'Input',
-  },
-  {
-    label: '入库部门id',
-    fieldName: 'deptId',
-    component: 'Input',
-  },
-  {
-    label: '入库负责人',
-    fieldName: 'inboundResponsiblePerson',
-    component: 'Input',
-  },
-  {
-    label: '入库日期',
-    fieldName: 'inboundDate',
-    component: 'DatePicker',
-    componentProps: {
-      showTime: true,
-      format: 'YYYY-MM-DD HH:mm:ss',
-      valueFormat: 'YYYY-MM-DD HH:mm:ss',
-    },
-  },
-  {
-    label: '备注',
-    fieldName: 'remark',
-    component: 'Textarea',
-  },
-];

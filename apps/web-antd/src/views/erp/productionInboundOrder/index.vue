@@ -1,25 +1,27 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { ProductionInboundOrderForm } from '#/api/erp/productionInboundOrder/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
-import { Popconfirm, Space } from 'antdv-next';
 
-import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
+import { Space } from 'antdv-next';
+
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   productionInboundOrderExport,
   productionInboundOrderList,
   productionInboundOrderRemove,
 } from '#/api/erp/productionInboundOrder';
-import type { ProductionInboundOrderForm } from '#/api/erp/productionInboundOrder/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import productionInboundOrderModal from './productionInboundOrder-modal.vue';
 import { columns, querySchema } from './data';
+import productionInboundOrderModal from './productionInboundOrder-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 100,
     componentProps: {
       allowClear: true,
     },
@@ -89,6 +91,11 @@ async function handleEdit(row: Required<ProductionInboundOrderForm>) {
   modalApi.open();
 }
 
+async function handleView(row: Required<ProductionInboundOrderForm>) {
+  modalApi.setData({ id: row.id, view: true });
+  modalApi.open();
+}
+
 async function handleDelete(row: Required<ProductionInboundOrderForm>) {
   await productionInboundOrderRemove(row.id);
   await tableApi.query();
@@ -123,23 +130,6 @@ async function handleExport() {
       <template #toolbar-tools>
         <Space>
           <a-button
-            v-access:code="['erp:productionInboundOrder:export']"
-            :loading="exportLoading"
-            :disabled="exportLoading"
-            @click="handleExport"
-          >
-            {{ $t('pages.common.export') }}
-          </a-button>
-          <a-button
-            :disabled="!vxeCheckboxChecked(tableApi)"
-            danger
-            type="primary"
-            v-access:code="['erp:productionInboundOrder:remove']"
-            @click="handleMultiDelete"
-          >
-            {{ $t('pages.common.delete') }}
-          </a-button>
-          <a-button
             type="primary"
             v-access:code="['erp:productionInboundOrder:add']"
             @click="handleAdd"
@@ -150,21 +140,9 @@ async function handleExport() {
       </template>
       <template #action="{ row }">
         <Space>
-          <action-button
-            v-access:code="['erp:productionInboundOrder:edit']"
-            @click.stop="handleEdit(row)"
-          >
-            {{ $t('pages.common.edit') }}
+          <action-button @click.stop="handleView(row)">
+            查看
           </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
-            <action-button
-              danger
-              v-access:code="['erp:productionInboundOrder:remove']"
-              @click.stop=""
-            >
-              {{ $t('pages.common.delete') }}
-            </action-button>
-          </Popconfirm>
         </Space>
       </template>
     </BasicTable>

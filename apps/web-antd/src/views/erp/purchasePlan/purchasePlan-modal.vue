@@ -8,8 +8,8 @@ import type { TableColumnsType } from 'antdv-next';
 import type { Rule } from 'antdv-next/dist/form/types';
 
 import type { MaterialInfoVO } from '#/api/erp/materialInfo/model';
+import type { ProductionPlanVO } from '#/api/erp/productionPlan/model';
 import type { PurchasePlanForm } from '#/api/erp/purchasePlan/model';
-import type { SalesOrderVO } from '#/api/erp/salesOrder/model';
 
 import { computed, ref } from 'vue';
 
@@ -31,12 +31,13 @@ import {
   Table,
   TextArea
 } from 'antdv-next';
+import dayjs from 'dayjs';
 import { pick } from 'lodash-es';
 
 import { purchasePlanAdd, purchasePlanInfo, purchasePlanUpdate } from '#/api/erp/purchasePlan';
 import { DictTag } from '#/components/dict';
 import SelectMaterial from '#/components/select-material/src/index.vue';
-import SelectSalesOrder from '#/components/select-sales-order/src/index.vue';
+import SelectProductionPlan from '#/components/select-production-plan/src/index.vue';
 import { getDictOptions } from '#/utils/dict';
 import { useBeforeCloseDiff } from '#/utils/popup';
 
@@ -77,9 +78,9 @@ const title = computed(() => {
 const defaultValues: Partial<PurchasePlanForm> = {
   id: undefined,
   planCode: undefined,
-  salesOrderId: undefined,
-  salesOrderCode: undefined,
-  planDate: undefined,
+  productionPlanId: undefined,
+  productionPlanCode: undefined,
+  planDate: dayjs().format('YYYY-MM-DD'),
   status: '1',
   remark: undefined,
   orderTotalAmount: undefined,
@@ -103,17 +104,16 @@ const formRules = ref<AntdFormRules<PurchasePlanForm>>({});
 const formInstance = ref<FormInstance>();
 
 const selectMaterialRef = ref<InstanceType<typeof SelectMaterial>>();
-const selectSalesOrderRef = ref<InstanceType<typeof SelectSalesOrder>>();
+const selectProductionPlanRef = ref<InstanceType<typeof SelectProductionPlan>>();
 const currentEditRow = ref<null | PurchasePlanItemRow>(null);
 
-function handleSalesOrderSelect(row: SalesOrderVO) {
-  formData.value.salesOrderId = row.id;
-  formData.value.salesOrderCode = row.orderCode;
+function handleProductionPlanSelect(row: ProductionPlanVO) {
+  formData.value.productionPlanId = row.id;
+  formData.value.productionPlanCode = row.planCode;
+  formData.value.salesOrderCode = row.salesOrderCode;
 }
 
 const purchasePlanItemList = ref<PurchasePlanItemRow[]>([]);
-
-
 
 
 function customFormValueGetter() {
@@ -166,6 +166,12 @@ function handleRemoveRow(row: PurchasePlanItemRow) {
   }
 }
 
+function calculateAmounts(record: PurchasePlanItemRow) {
+  if (record.quantity && record.taxIncludedPrice) {
+    record.actualTotalAmount = record.quantity * record.taxIncludedPrice;
+  }
+}
+
 
 
 const columns: TableColumnsType<PurchasePlanItemRow> = [
@@ -194,8 +200,8 @@ const columns: TableColumnsType<PurchasePlanItemRow> = [
   },
   {
     title: '采购数量',
-    dataIndex: 'quantity',
-    key: 'quantity',
+    dataIndex: 'planQuantity',
+    key: 'planQuantity',
     width: 70,
     render: (_: any, record: PurchasePlanItemRow) => (
       <InputNumber
@@ -342,16 +348,16 @@ async function handleClosed() {
           </FormItem>
         </Col>
         <Col :span="8">
-          <FormItem label="销售订单" name="salesOrderId" :rules="formRules.salesOrderId">
+          <FormItem label="生产计划" name="productionPlanId" :rules="formRules.productionPlanId">
             <a-input-group compact style="display:flex">
-              <Input :value="formData.salesOrderCode" placeholder="请选择销售订单" readonly style="flex:1" />
-              <a-button v-if="viewMode" @click="selectSalesOrderRef?.open()">选择</a-button>
+              <Input :value="formData.productionPlanCode" placeholder="请选择生产计划" readonly style="flex:1" />
+              <a-button v-if="viewMode" @click="selectProductionPlanRef?.open()">选择</a-button>
             </a-input-group>
           </FormItem>
         </Col>
         
         <Col :span="8">
-          <FormItem label="日期" name="planDate" :rules="formRules.planDate">
+          <FormItem label="单据日期" name="planDate" :rules="formRules.planDate">
             <DatePicker
               v-model:value="formData.planDate"
               format="YYYY-MM-DD"
@@ -397,9 +403,9 @@ async function handleClosed() {
       ref="selectMaterialRef"
       @update:value="(rows: MaterialInfoVO[]) => handleMaterialSelect(rows)"
     />
-    <SelectSalesOrder
-      ref="selectSalesOrderRef"
-      @update:value="handleSalesOrderSelect"
+    <SelectProductionPlan
+      ref="selectProductionPlanRef"
+      @update:value="handleProductionPlanSelect"
     />
   </BasicModal>
 </template>

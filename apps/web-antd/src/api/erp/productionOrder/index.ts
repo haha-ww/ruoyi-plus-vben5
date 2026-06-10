@@ -1,4 +1,4 @@
-import type { ProductionOrderVO, ProductionOrderForm, ProductionOrderQuery } from './model';
+import type { ProductionOrderForm, ProductionOrderQuery, ProductionOrderVO } from './model';
 
 import type { ID, IDS } from '#/api/common';
 import type { PageResult } from '#/api/common';
@@ -58,4 +58,13 @@ export function productionOrderUpdate(data: ProductionOrderForm) {
  */
 export function productionOrderRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/productionOrder/${id}`);
+}
+
+/**
+ * 根据生产订单ID查询领料数据（用于生成领料单）
+ * @param id 生产订单ID
+ * @returns 领料数据列表
+ */
+export function getProductionOrderPickList(id: ID) {
+  return alovaInstance.get<any>(`/erp/productionOrder/pickList/${id}`);
 }

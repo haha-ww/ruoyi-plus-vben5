@@ -5,8 +5,9 @@ import type { TableColumnsType } from 'antdv-next';
 import type { MaterialInfoVO } from '#/api/erp/materialInfo/model';
 import type { MaterialOutboundOrderForm } from '#/api/erp/materialOutboundOrder/model';
 import type { MaterialOutboundOrderItemVO } from '#/api/erp/materialOutboundOrderItem/model';
+import type { ProductionOrderVO } from '#/api/erp/productionOrder/model';
 
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { alert, useVbenModal } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -16,7 +17,6 @@ import { cloneDeep } from '@vben/utils';
 import {
   Button,
   Col,
-  DatePicker,
   Divider,
   Form,
   FormItem,
@@ -24,21 +24,23 @@ import {
   InputNumber,
   Row,
   Select,
+  Space,
   Table,
   TextArea,
   TreeSelect,
 } from 'antdv-next';
-import dayjs from 'dayjs';
-import { pick } from 'lodash-es';
 
-import { materialOutboundOrderInfo, materialOutboundOrderOutbound } from '#/api/erp/materialOutboundOrder';
+import {
+  materialOutboundOrderAdd,
+} from '#/api/erp/materialOutboundOrder';
+import { getProductionOrderPickList } from '#/api/erp/productionOrder';
 import { warehouseInventoryList } from '#/api/erp/warehouseInventory';
 import { deptTreeSelect } from '#/api/system/user';
 import { liststaffSelect, listWarehouseSelect } from '#/api/wcommon';
 import SelectMaterial from '#/components/select-material/src/index.vue';
 import { useBeforeCloseDiff } from '#/utils/popup';
 
-interface MaterialOutboundOrderItemRow {
+interface PickListItem {
   id?: number | string;
   outboundOrderId?: number | string;
   materialId?: number | string;
@@ -52,30 +54,25 @@ interface MaterialOutboundOrderItemRow {
   unitName?: string;
   currentQty?: number;
 }
-
 const emit = defineEmits<{ reload: [] }>();
 
-const isUpdate = ref(false);
-const viewMode = ref(false);
-const title = computed(() => {
-  if (viewMode.value) return '查看领料出库单';
-  return isUpdate.value ? $t('pages.common.edit') : $t('pages.common.add');
-});
+const title = computed(() => '生成领料单');
 
 const defaultValues: Partial<MaterialOutboundOrderForm> = {
   id: undefined,
   outboundOrderCode: undefined,
   deptId: undefined,
   picker: undefined,
-  outboundDate: dayjs().format('YYYY-MM-DD'),
+  outboundDate: '',
   remark: undefined,
 };
 
 const formData = ref<Partial<MaterialOutboundOrderForm>>({ ...defaultValues });
 const formInstance = ref<FormInstance>();
 const selectMaterialRef = ref<InstanceType<typeof SelectMaterial>>();
-const currentEditRow = ref<MaterialOutboundOrderItemRow | null>(null);
-const outboundItemList = ref<MaterialOutboundOrderItemRow[]>([]);
+const currentEditRow = ref<null | PickListItem>(null);
+const outboundItemList = ref<PickListItem[]>([]);
+const productionOrderInfo = ref<null | ProductionOrderVO>(null);
 
 const deptTreeData = ref<any[]>([]);
 const staffOptions = ref<Array<{ label: string; value: number | string }>>([]);
@@ -105,7 +102,7 @@ async function loadWarehouseOptions() {
   }
 }
 
-async function loadCurrentQty(row: MaterialOutboundOrderItemRow) {
+async function loadCurrentQty(row: PickListItem) {
   if (!row.materialId || !row.warehouseId) {
     row.currentQty = undefined;
     return;
@@ -133,7 +130,7 @@ const { onBeforeClose, markInitialized, resetInitialized } = useBeforeCloseDiff(
   currentGetter: customFormValueGetter,
 });
 
-function handleOpenSelectMaterial(row: MaterialOutboundOrderItemRow) {
+function handleOpenSelectMaterial(row: PickListItem) {
   currentEditRow.value = row;
   selectMaterialRef.value?.open();
 }
@@ -158,26 +155,34 @@ function handleAddRow() {
     model: undefined,
     unitName: undefined,
     actualQuantity: undefined,
+    requiredQuantity: undefined,
     warehouseId: undefined,
     currentQty: undefined,
   });
 }
 
-function handleRemoveRow(row: MaterialOutboundOrderItemRow) {
+function handleRemoveRow(row: PickListItem) {
   const index = outboundItemList.value.findIndex((item) => item.id === row.id);
   if (index !== -1) {
     outboundItemList.value.splice(index, 1);
   }
 }
 
+watch(
+  () => formData.value.deptId,
+  (newDeptId) => {
+    formData.value.picker = undefined;
+    loadStaffOptions(newDeptId);
+  },
+);
 
-const columns: TableColumnsType<MaterialOutboundOrderItemRow> = [
+const columns: TableColumnsType<PickListItem> = [
   {
     title: '物料名称',
     dataIndex: 'materialName',
     key: 'materialName',
     width: 150,
-    render: (_: any, record: MaterialOutboundOrderItemRow) => (
+    render: (_: any, record: PickListItem) => (
       <Button onClick={() => handleOpenSelectMaterial(record)} size="small" type="link">
         {record.materialName || '请选择'}
       </Button>
@@ -206,7 +211,7 @@ const columns: TableColumnsType<MaterialOutboundOrderItemRow> = [
     dataIndex: 'actualQuantity',
     key: 'actualQuantity',
     width: 110,
-    render: (_: any, record: MaterialOutboundOrderItemRow) => (
+    render: (_: any, record: PickListItem) => (
       <InputNumber
         min={0}
         placeholder="请输入"
@@ -221,7 +226,7 @@ const columns: TableColumnsType<MaterialOutboundOrderItemRow> = [
     dataIndex: 'warehouseId',
     key: 'warehouseId',
     width: 140,
-    render: (_: any, record: MaterialOutboundOrderItemRow) => (
+    render: (_: any, record: PickListItem) => (
       <Select
         field-names={{ label: 'warehouseName', value: 'id' }}
         get-popup-container={getPopupContainer}
@@ -239,7 +244,19 @@ const columns: TableColumnsType<MaterialOutboundOrderItemRow> = [
     key: 'currentQty',
     width: 100,
   },
+  {
+    title: '操作',
+    key: 'action',
+    width: 80,
+    fixed: 'right' as const,
+    render: (_: any, record: PickListItem) => (
+      <Button danger onClick={() => handleRemoveRow(record)} size="small">
+        删除
+      </Button>
+    ),
+  },
 ];
+
 
 const [BasicModal, modalApi] = useVbenModal({
   class: 'w-[1000px]',
@@ -254,21 +271,24 @@ const [BasicModal, modalApi] = useVbenModal({
 
     await Promise.all([loadDeptTree(), loadWarehouseOptions(), loadStaffOptions()]);
 
-    const { id, view } = modalApi.getData() as { id?: number | string; view?: boolean };
-    isUpdate.value = !!id;
-    viewMode.value = !!view;
-// 动态更新 showConfirmButton
-modalApi.setState({ showConfirmButton: !viewMode.value });
-    if (isUpdate.value && id) {
-      const record = await materialOutboundOrderInfo(id);
-      formData.value = pick(record, Object.keys(defaultValues));
-      outboundItemList.value = (record as any).itemList ?? [];
-      if (formData.value.deptId) {
-        await loadStaffOptions(formData.value.deptId);
+    const { productionOrderId } = modalApi.getData() as { productionOrderId?: number | string };
+
+    if (productionOrderId) {
+      try {
+        const pickListData = await getProductionOrderPickList(productionOrderId);
+        formData.value = pickListData ?? null;
+        outboundItemList.value = pickListData.itemList ?? [];
+        if (formData.value.deptId) {
+          await loadStaffOptions(formData.value.deptId);
+        }
+      } catch (error) {
+        console.error('加载领料数据失败:', error);
+        alert({ content: '加载领料数据失败', icon: 'error' });
+        outboundItemList.value = [];
       }
     } else {
-      formData.value = { ...defaultValues, outboundDate: dayjs().format('YYYY-MM-DD') };
       outboundItemList.value = [];
+      formData.value = { ...defaultValues };
     }
 
     await markInitialized();
@@ -294,14 +314,11 @@ async function handleConfirm() {
         alert({ content: `第${i + 1}行领料数量必须大于0`, icon: 'warning' });
         return;
       }
-      if (!row.warehouseId) {
-        alert({ content: `第${i + 1}行发料仓库不能为空`, icon: 'warning' });
-        return;
-      }
     }
     const data = cloneDeep(formData.value) as MaterialOutboundOrderForm;
     (data as any).itemList = outboundItemList.value as MaterialOutboundOrderItemVO[];
-    await materialOutboundOrderOutbound(data);
+    data.isPick=1
+    await materialOutboundOrderAdd(data);
     resetInitialized();
     emit('reload');
     modalApi.close();
@@ -316,19 +333,23 @@ async function handleClosed() {
   formData.value = { ...defaultValues };
   formInstance.value?.resetFields();
   outboundItemList.value = [];
-  viewMode.value = false;
+  productionOrderInfo.value = null;
   resetInitialized();
 }
 </script>
 
 <template>
   <BasicModal :title="title">
-    <Form ref="formInstance" :label-col="{ span: 6 }" :model="formData" :disabled="viewMode">
+    <Form ref="formInstance" :label-col="{ span: 6 }" :model="formData">
       <Divider orientation="left">基本信息</Divider>
       <Row :gutter="24">
         <Col :span="8">
-          <FormItem label="出库单号" name="outboundOrderCode">
-            <Input v-model:value="formData.outboundOrderCode" placeholder="系统自动生成" disabled />
+          <FormItem label="生产订单号" name="productionOrderCode">
+            <Input
+              :value="formData?.productionOrderCode"
+              placeholder="系统自动获取"
+              disabled
+            />
           </FormItem>
         </Col>
         <Col :span="8">
@@ -338,7 +359,6 @@ async function handleClosed() {
               :tree-data="deptTreeData"
               :field-names="{ label: 'label', value: 'id' }"
               :placeholder="$t('ui.formRules.selectRequired')"
-              @change="loadStaffOptions"
               style="width: 100%"
               tree-default-expand-all
               allow-clear
@@ -357,16 +377,6 @@ async function handleClosed() {
             />
           </FormItem>
         </Col>
-        <Col :span="8">
-          <FormItem label="出库日期" name="outboundDate">
-            <DatePicker
-              v-model:value="formData.outboundDate"
-              format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            />
-          </FormItem>
-        </Col>
         <Col :span="16">
           <FormItem label="备注" name="remark">
             <TextArea v-model:value="formData.remark" :rows="2" placeholder="请输入备注" />
@@ -376,6 +386,9 @@ async function handleClosed() {
 
       <Divider orientation="left">领料出库明细</Divider>
       <div class="mb-3 ml-10">
+        <Space>
+          <Button type="primary" @click="handleAddRow">新增行</Button>
+        </Space>
       </div>
       <Table
         :columns="columns"

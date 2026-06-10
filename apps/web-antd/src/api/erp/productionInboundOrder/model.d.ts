@@ -12,6 +12,21 @@ export interface ProductionInboundOrderVO {
   inboundOrderCode: string;
 
   /**
+   * 生产订单id
+   */
+  productionOrderId?: string | number;
+
+  /**
+   * 生产订单编码
+   */
+  productionOrderCode?: string;
+
+  /**
+   * 入库仓库id
+   */
+  inboundWarehouseId?: string | number;
+
+  /**
    * 入库部门id
    */
   deptId: string | number;
@@ -45,6 +60,21 @@ export interface ProductionInboundOrderForm extends BaseEntity {
   inboundOrderCode?: string;
 
   /**
+   * 生产订单id
+   */
+  productionOrderId?: string | number;
+
+  /**
+   * 生产订单编码
+   */
+  productionOrderCode?: string;
+
+  /**
+   * 入库仓库id
+   */
+  inboundWarehouseId?: string | number;
+
+  /**
    * 入库部门id
    */
   deptId?: string | number;
@@ -71,6 +101,11 @@ export interface ProductionInboundOrderQuery extends PageQuery {
    * 生产入库单编码
    */
   inboundOrderCode?: string;
+
+  /**
+   * 生产订单编码
+   */
+  productionOrderCode?: string;
 
   /**
    * 入库部门id

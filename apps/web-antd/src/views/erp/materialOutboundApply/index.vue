@@ -2,23 +2,24 @@
 import type { VbenFormProps } from '@vben/common-ui';
 
 import type { VxeGridProps } from '#/adapter/vxe-table';
-import type { ProductionOrderForm } from '#/api/erp/productionOrder/model';
+import type { MaterialOutboundOrderForm } from '#/api/erp/materialOutboundOrder/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
 
 import { Popconfirm, Space } from 'antdv-next';
 
-import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
-  productionOrderExport,
-  productionOrderList,
-  productionOrderRemove,
-} from '#/api/erp/productionOrder';
+  materialOutboundOrderExport,
+  materialOutboundOrderList,
+  materialOutboundOrderRemove,
+} from '#/api/erp/materialOutboundOrder';
 import { useBlobExport } from '#/utils/file/export';
 
 import { columns, querySchema } from './data';
-import generatePickListModal from './generatePickList-modal.vue';
-import productionOrderModal from './productionOrder-modal.vue';
+import materialOutboundOrderModal from './materialOutboundOrder-modal.vue';
+
+
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -58,7 +59,7 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues = {}) => {
-        return await productionOrderList({
+        return await materialOutboundOrderList({
           pageNum: page.currentPage,
           pageSize: page.pageSize,
           ...formValues,
@@ -70,7 +71,7 @@ const gridOptions: VxeGridProps = {
     keyField: 'id',
   },
   // 表格全局唯一表示 保存列配置需要用到
-  id: 'erp-productionOrder-index',
+  id: 'erp-materialOutboundOrder-index',
 };
 
 const [BasicTable, tableApi] = useVbenVxeGrid({
@@ -78,12 +79,8 @@ const [BasicTable, tableApi] = useVbenVxeGrid({
   gridOptions,
 });
 
-const [ProductionOrderModal, modalApi] = useVbenModal({
-  connectedComponent: productionOrderModal,
-});
-
-const [GeneratePickListModal, generatePickListModalApi] = useVbenModal({
-  connectedComponent: generatePickListModal,
+const [MaterialOutboundOrderModal, modalApi] = useVbenModal({
+  connectedComponent: materialOutboundOrderModal,
 });
 
 function handleAdd() {
@@ -91,69 +88,52 @@ function handleAdd() {
   modalApi.open();
 }
 
-async function handleEdit(row: Required<ProductionOrderForm>) {
+async function handleEdit(row: Required<MaterialOutboundOrderForm>) {
   modalApi.setData({ id: row.id });
   modalApi.open();
 }
 
-async function handleDelete(row: Required<ProductionOrderForm>) {
-  await productionOrderRemove(row.id);
-  await tableApi.query();
+async function handleView(row: Required<MaterialOutboundOrderForm>) {
+  modalApi.setData({ id: row.id, view: true });
+  modalApi.open();
 }
 
-function handleGeneratePickList(row: Required<ProductionOrderForm>) {
-  generatePickListModalApi.setData({ productionOrderId: row.id });
-  generatePickListModalApi.open();
+async function handleDelete(row: Required<MaterialOutboundOrderForm>) {
+  await materialOutboundOrderRemove(row.id);
+  await tableApi.query();
 }
 
 function handleMultiDelete() {
   const rows = tableApi.grid.getCheckboxRecords();
-  const ids = rows.map((row: Required<ProductionOrderForm>) => row.id);
+  const ids = rows.map((row: Required<MaterialOutboundOrderForm>) => row.id);
   window.modal.confirm({
     title: '提示',
     okType: 'danger',
     content: `确认删除选中的${ids.length}条记录吗？`,
     onOk: async () => {
-      await productionOrderRemove(ids);
+      await materialOutboundOrderRemove(ids);
       await tableApi.query();
     },
   });
 }
 
-const { exportBlob, exportLoading, buildExportFileName } = useBlobExport(productionOrderExport);
+const { exportBlob, exportLoading, buildExportFileName } = useBlobExport(materialOutboundOrderExport);
 
 async function handleExport() {
   const formValues = await tableApi.formApi.getValues();
-  const fileName = buildExportFileName('生产订单数据');
+  const fileName = buildExportFileName('领料出库数据');
   exportBlob({ data: formValues, fileName });
 }
 </script>
 
 <template>
   <Page :auto-content-height="true">
-    <BasicTable table-title="生产订单列表">
+    <BasicTable table-title="领料申请列表">
       <template #toolbar-tools>
         <Space>
           <a-button
-            v-access:code="['erp:productionOrder:export']"
-            :loading="exportLoading"
-            :disabled="exportLoading"
-            @click="handleExport"
-          >
-            {{ $t('pages.common.export') }}
-          </a-button>
-          <a-button
-            :disabled="!vxeCheckboxChecked(tableApi)"
-            danger
             type="primary"
-            v-access:code="['erp:productionOrder:remove']"
-            @click="handleMultiDelete"
-          >
-            {{ $t('pages.common.delete') }}
-          </a-button>
-          <a-button
-            type="primary"
-            v-access:code="['erp:productionOrder:add']"
+            v-access:code="['erp:materialOutboundOrder:add']"
             @click="handleAdd"
           >
             {{ $t('pages.common.add') }}
@@ -163,31 +143,29 @@ async function handleExport() {
       <template #action="{ row }">
         <Space>
           <action-button
-            v-access:code="['erp:productionOrder:edit']"
+            v-access:code="['erp:materialOutboundOrder:query']"
+            @click.stop="handleView(row)"
+          >
+            查看
+          </action-button>
+          <action-button
+            v-access:code="['erp:materialOutboundOrder:edit']"
             @click.stop="handleEdit(row)"
           >
             {{ $t('pages.common.edit') }}
           </action-button>
-          <action-button
-            v-access:code="['erp:productionOrder:pickList']"
-            @click.stop="handleGeneratePickList(row)"
-            v-if="row.isPick == 0"
-          >
-            生成领料单
-          </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
+          <Popconfirm placement="left" title="确认作废吗？" @confirm="handleDelete(row)">
             <action-button
               danger
-              v-access:code="['erp:productionOrder:remove']"
+              v-access:code="['erp:materialOutboundOrder:remove']"
               @click.stop=""
             >
-              {{ $t('pages.common.delete') }}
+              作废
             </action-button>
           </Popconfirm>
         </Space>
       </template>
     </BasicTable>
-    <ProductionOrderModal @reload="tableApi.query()" />
-    <GeneratePickListModal @reload="tableApi.query()" />
+    <MaterialOutboundOrderModal @reload="tableApi.query()" />
   </Page>
 </template>

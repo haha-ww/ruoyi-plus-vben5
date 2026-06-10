@@ -90,10 +90,6 @@ export const columns: VxeGridProps['columns'] = [
     field: 'orderQuantity',
   },
   {
-    title: '是否已领料',
-    field: 'isPick',
-  },
-  {
     title: '订单状态',
     field: 'orderStatus',
     slots: {
@@ -119,7 +115,7 @@ export const columns: VxeGridProps['columns'] = [
     fixed: 'right',
     slots: { default: 'action' },
     title: '操作',
-    width: 180,
+    width: 200,
   },
 ];
 

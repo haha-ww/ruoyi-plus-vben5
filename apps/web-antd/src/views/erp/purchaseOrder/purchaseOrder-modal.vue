@@ -10,7 +10,8 @@ import type { Rule } from 'antdv-next/dist/form/types';
 import type { MaterialInfoVO } from '#/api/erp/materialInfo/model';
 import type { PurchaseOrderForm } from '#/api/erp/purchaseOrder/model';
 import type { PurchaseOrderItemVO } from '#/api/erp/purchaseOrderItem/model';
-
+import type { PurchasePlanItemVO } from '#/api/erp/purchasePlanItem/model';
+import {SelectPurchasePlan} from '#/components/select-purchase-plan';
 import { computed, ref, watch } from 'vue';
 
 import { alert, useVbenModal } from '@vben/common-ui';
@@ -120,6 +121,7 @@ const formRules = ref<AntdFormRules<PurchaseOrderForm>>({});
 const formInstance = ref<FormInstance>();
 
 const selectMaterialRef = ref<InstanceType<typeof SelectMaterial>>();
+const selectPurchasePlanRef = ref<InstanceType<typeof SelectPurchasePlan>>();
 const currentEditRow = ref<null | PurchaseOrderItemRow>(null);
 
 const purchaseOrderItemList = ref<PurchaseOrderItemRow[]>([]);
@@ -216,6 +218,36 @@ function calculateOrderAmounts() {
 
   // 计算最终结算金额（订单总金额 - 优惠金额）
   formData.value.orderTotalAmount = Number((totalAmount - formData.value.discountAmount || 0).toFixed(2));
+}
+
+function handleOpenSelectPurchasePlan() {
+  selectPurchasePlanRef.value?.open();
+}
+
+function handlePurchasePlanSelect(rows: PurchasePlanItemVO[]) {
+  if (rows.length > 0) {
+    rows.forEach((planItem) => {
+      const record: PurchaseOrderItemRow = {
+        id: Date.now() + Math.random(),
+        orderId: undefined,
+        materialId: planItem.materialId,
+        materialName: (planItem as any).materialName,
+        materialCode: (planItem as any).materialCode,
+        model: (planItem as any).model,
+        quantity: planItem.remainQuantity,
+        taxIncludedPrice: undefined,
+        taxRate: 0,
+        taxExcludedPrice: undefined,
+        taxTotalAmount: undefined,
+        actualTotalAmount: undefined,
+        remainQuantity: undefined,
+        planItemId: planItem.id,
+        remark: planItem.remark,
+      };
+      purchaseOrderItemList.value.push(record);
+    });
+    calculateOrderAmounts();
+  }
 }
 
 function handleAddRow() {
@@ -562,6 +594,7 @@ async function handleClosed() {
       <div class="mb-3 ml-10" v-if="viewMode">
         <Space>
           <Button type="primary" @click="handleAddRow">新增行</Button>
+          <Button @click="handleOpenSelectPurchasePlan">从采购计划引入</Button>
         </Space>
       </div>
       <Table
@@ -623,6 +656,10 @@ async function handleClosed() {
     <SelectMaterial
       ref="selectMaterialRef"
       @update:value="(rows: MaterialInfoVO[]) => handleMaterialSelect(rows)"
+    />
+    <SelectPurchasePlan
+      ref="selectPurchasePlanRef"
+      @update:value="(rows: PurchasePlanItemVO[]) => handlePurchasePlanSelect(rows)"
     />
     <template #center-footer v-if="viewMode">
       <a-button color="green" variant="solid" @click="handleConfirm(10)">暂存</a-button>

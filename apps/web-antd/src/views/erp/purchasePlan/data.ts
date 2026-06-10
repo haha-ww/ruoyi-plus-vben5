@@ -12,11 +12,6 @@ export const querySchema: FormSchemaGetter = () => [
   },
   {
     component: 'Input',
-    fieldName: 'salesOrderId',
-    label: '销售订单id',
-  },
-  {
-    component: 'Input',
     fieldName: 'salesOrderCode',
     label: '销售订单编码',
   },
@@ -46,16 +41,8 @@ export const querySchema: FormSchemaGetter = () => [
 export const columns: VxeGridProps['columns'] = [
   { type: 'checkbox', width: 60 },
   {
-    title: '主键',
-    field: 'id',
-  },
-  {
     title: '采购计划编码',
     field: 'planCode',
-  },
-  {
-    title: '销售订单id',
-    field: 'salesOrderId',
   },
   {
     title: '销售订单编码',

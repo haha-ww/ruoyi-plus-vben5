@@ -1,12 +1,21 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import {
+  listCustomerSelect,
+  listMaterialSelect,
+  listSupplierSelect,
+  listWarehouseSelect,
+} from '#/api/wcommon';
+import { getDictOptions } from '#/utils/dict';
+import { renderDict } from '#/utils/render';
+
 
 export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Input',
     fieldName: 'transactionNo',
-    label: '事务单号(业务单据号)',
+    label: '业务单据号',
   },
   {
     component: 'DatePicker',
@@ -21,63 +30,90 @@ export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Select',
     componentProps: {
+      options: [
+        { label: '入库单', value: 1 },
+        { label: '出库单', value: 2 },
+      ],
     },
     fieldName: 'type',
-    label: '单据类型：1-入库单，2-出库单',
+    label: '单据类型',
   },
   {
     component: 'Select',
     componentProps: {
+      options: getDictOptions('transaction_type'),
     },
     fieldName: 'subType',
-    label: '事务类型(字典 transaction_type)',
+    label: '事务类型',
   },
   {
-    component: 'Input',
+    component: 'ApiSelect',
+    componentProps: {
+      api: listWarehouseSelect,
+      fieldNames: {
+        label: 'warehouseName',
+        value: 'id',
+      },
+      showSearch: true,
+      optionFilterProp: 'warehouseName',
+    },
     fieldName: 'warehouseId',
-    label: '关联仓库ID',
+    label: '仓库',
   },
   {
-    component: 'Input',
-    fieldName: 'businessPartnerId',
-    label: '业务伙伴ID',
+    component: 'ApiSelect',
+    componentProps: {
+      api: listCustomerSelect,
+      fieldNames: {
+        label: 'customerName',
+        value: 'id',
+      },
+      showSearch: true,
+      optionFilterProp: 'customerName',
+    },
+    fieldName: 'customerId',
+    label: '客户',
   },
   {
-    component: 'Input',
+    component: 'ApiSelect',
+    componentProps: {
+      api: listSupplierSelect,
+      fieldNames: {
+        label: 'supplierName',
+        value: 'id',
+      },
+      showSearch: true,
+      optionFilterProp: 'supplierName',
+    },
+    fieldName: 'supplierId',
+    label: '供应商',
+  },
+  {
+    component: 'ApiSelect',
+    componentProps: {
+      api: listMaterialSelect,
+      fieldNames: {
+        label: 'materialName',
+        value: 'id',
+      },
+      showSearch: true,
+      optionFilterProp: 'materialName',
+    },
     fieldName: 'materialId',
-    label: '物料ID',
+    label: '物料',
   },
   {
     component: 'Input',
     fieldName: 'batchNo',
     label: '批次号',
   },
-  {
-    component: 'Input',
-    fieldName: 'quantity',
-    label: '变动数量',
-  },
-  {
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-    fieldName: 'status',
-    label: '状态',
-  },
 ];
 
 // 需要使用i18n注意这里要改成getter形式 否则切换语言不会刷新
 // export const columns: () => VxeGridProps['columns'] = () => [
 export const columns: VxeGridProps['columns'] = [
-  { type: 'checkbox', width: 60 },
   {
-    title: '事务ID',
-    field: 'id',
-  },
-  {
-    title: '事务单号(业务单据号)',
+    title: '业务单据号',
     field: 'transactionNo',
   },
   {
@@ -85,24 +121,34 @@ export const columns: VxeGridProps['columns'] = [
     field: 'transactionDate',
   },
   {
-    title: '单据类型：1-入库单，2-出库单',
+    title: '单据类型',
     field: 'type',
   },
   {
-    title: '事务类型(字典 transaction_type)',
+    title: '事务类型',
     field: 'subType',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.SALES_ORDER_STATUS 便于维护
+        return renderDict(row.subType, 'transaction_type');
+      },
+    },
   },
   {
-    title: '关联仓库ID',
-    field: 'warehouseId',
+    title: '仓库',
+    field: 'warehouseName',
   },
   {
-    title: '业务伙伴ID',
-    field: 'businessPartnerId',
+    title: '客户',
+    field: 'customerName',
   },
   {
-    title: '物料ID',
-    field: 'materialId',
+    title: '供应商',
+    field: 'supplierName',
+  },
+  {
+    title: '物料名称',
+    field: 'materialName',
   },
   {
     title: '批次号',
@@ -111,10 +157,6 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '变动数量',
     field: 'quantity',
-  },
-  {
-    title: '状态',
-    field: 'status',
   },
   {
     title: '备注',
@@ -158,15 +200,13 @@ export const modalSchema: FormSchemaGetter = () => [
     label: '单据类型：1-入库单，2-出库单',
     fieldName: 'type',
     component: 'Select',
-    componentProps: {
-    },
+    componentProps: {},
   },
   {
     label: '事务类型(字典 transaction_type)',
     fieldName: 'subType',
     component: 'Select',
-    componentProps: {
-    },
+    componentProps: {},
   },
   {
     label: '关联仓库ID',

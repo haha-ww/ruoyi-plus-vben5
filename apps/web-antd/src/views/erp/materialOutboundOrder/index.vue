@@ -1,25 +1,29 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { MaterialOutboundOrderForm } from '#/api/erp/materialOutboundOrder/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
-import { Popconfirm, Space } from 'antdv-next';
 
-import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
+import { Space } from 'antdv-next';
+
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   materialOutboundOrderExport,
   materialOutboundOrderList,
   materialOutboundOrderRemove,
 } from '#/api/erp/materialOutboundOrder';
-import type { MaterialOutboundOrderForm } from '#/api/erp/materialOutboundOrder/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import materialOutboundOrderModal from './materialOutboundOrder-modal.vue';
 import { columns, querySchema } from './data';
+import materialOutboundOrderModal from './materialOutboundOrder-modal.vue';
+
+
 
 const formOptions: VbenFormProps = {
   commonConfig: {
-    labelWidth: 80,
+    labelWidth: 90,
     componentProps: {
       allowClear: true,
     },
@@ -89,6 +93,11 @@ async function handleEdit(row: Required<MaterialOutboundOrderForm>) {
   modalApi.open();
 }
 
+async function handleView(row: Required<MaterialOutboundOrderForm>) {
+  modalApi.setData({ id: row.id, view: true });
+  modalApi.open();
+}
+
 async function handleDelete(row: Required<MaterialOutboundOrderForm>) {
   await materialOutboundOrderRemove(row.id);
   await tableApi.query();
@@ -130,41 +139,22 @@ async function handleExport() {
           >
             {{ $t('pages.common.export') }}
           </a-button>
-          <a-button
-            :disabled="!vxeCheckboxChecked(tableApi)"
-            danger
-            type="primary"
-            v-access:code="['erp:materialOutboundOrder:remove']"
-            @click="handleMultiDelete"
-          >
-            {{ $t('pages.common.delete') }}
-          </a-button>
-          <a-button
-            type="primary"
-            v-access:code="['erp:materialOutboundOrder:add']"
-            @click="handleAdd"
-          >
-            {{ $t('pages.common.add') }}
-          </a-button>
         </Space>
       </template>
       <template #action="{ row }">
         <Space>
           <action-button
+            v-access:code="['erp:materialOutboundOrder:query']"
+            @click.stop="handleView(row)"
+          >
+            查看
+          </action-button>
+          <action-button
             v-access:code="['erp:materialOutboundOrder:edit']"
             @click.stop="handleEdit(row)"
           >
-            {{ $t('pages.common.edit') }}
+            出库
           </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
-            <action-button
-              danger
-              v-access:code="['erp:materialOutboundOrder:remove']"
-              @click.stop=""
-            >
-              {{ $t('pages.common.delete') }}
-            </action-button>
-          </Popconfirm>
         </Space>
       </template>
     </BasicTable>

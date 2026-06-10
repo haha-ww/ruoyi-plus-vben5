@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import type { VbenFormProps } from '@vben/common-ui';
+
 import type { VxeGridProps } from '#/adapter/vxe-table';
+import type { WarehouseInventoryTransactionForm } from '#/api/erp/warehouseInventoryTransaction/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
-import { Popconfirm, Space } from 'antdv-next';
 
-import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
+import { Space } from 'antdv-next';
+
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
   warehouseInventoryTransactionExport,
   warehouseInventoryTransactionList,
   warehouseInventoryTransactionRemove,
 } from '#/api/erp/warehouseInventoryTransaction';
-import type { WarehouseInventoryTransactionForm } from '#/api/erp/warehouseInventoryTransaction/model';
 import { useBlobExport } from '#/utils/file/export';
 
-import warehouseInventoryTransactionModal from './warehouseInventoryTransaction-modal.vue';
 import { columns, querySchema } from './data';
+import warehouseInventoryTransactionModal from './warehouseInventoryTransaction-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -130,22 +132,6 @@ async function handleExport() {
           >
             {{ $t('pages.common.export') }}
           </a-button>
-          <a-button
-            :disabled="!vxeCheckboxChecked(tableApi)"
-            danger
-            type="primary"
-            v-access:code="['erp:warehouseInventoryTransaction:remove']"
-            @click="handleMultiDelete"
-          >
-            {{ $t('pages.common.delete') }}
-          </a-button>
-          <a-button
-            type="primary"
-            v-access:code="['erp:warehouseInventoryTransaction:add']"
-            @click="handleAdd"
-          >
-            {{ $t('pages.common.add') }}
-          </a-button>
         </Space>
       </template>
       <template #action="{ row }">
@@ -156,15 +142,6 @@ async function handleExport() {
           >
             {{ $t('pages.common.edit') }}
           </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
-            <action-button
-              danger
-              v-access:code="['erp:warehouseInventoryTransaction:remove']"
-              @click.stop=""
-            >
-              {{ $t('pages.common.delete') }}
-            </action-button>
-          </Popconfirm>
         </Space>
       </template>
     </BasicTable>

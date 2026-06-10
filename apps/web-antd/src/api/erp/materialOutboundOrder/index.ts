@@ -1,4 +1,4 @@
-import type { MaterialOutboundOrderVO, MaterialOutboundOrderForm, MaterialOutboundOrderQuery } from './model';
+import type { MaterialOutboundOrderForm, MaterialOutboundOrderQuery, MaterialOutboundOrderVO } from './model';
 
 import type { ID, IDS } from '#/api/common';
 import type { PageResult } from '#/api/common';
@@ -58,4 +58,13 @@ export function materialOutboundOrderUpdate(data: MaterialOutboundOrderForm) {
  */
 export function materialOutboundOrderRemove(id: ID | IDS) {
   return alovaInstance.deleteWithMsg<void>(`/erp/materialOutboundOrder/${id}`);
+}
+
+/**
+ * 出库
+ * @param data
+ * @returns void
+ */
+export function materialOutboundOrderOutbound(data: MaterialOutboundOrderForm) {
+  return alovaInstance.putWithMsg<void>('/erp/materialOutboundOrder/confirm', data);
 }
