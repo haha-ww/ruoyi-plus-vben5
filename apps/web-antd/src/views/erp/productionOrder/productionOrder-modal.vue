@@ -30,7 +30,6 @@ import {
   FormItem,
   Input,
   InputNumber,
-  RadioGroup,
   Row,
   Select,
   Space,
@@ -38,12 +37,14 @@ import {
   TextArea,
   TreeSelect,
 } from 'antdv-next';
+import dayjs from 'dayjs';
 import { pick } from 'lodash-es';
 
 import { productionOrderAdd, productionOrderInfo, productionOrderUpdate } from '#/api/erp/productionOrder';
 import { technologyOperationList } from '#/api/erp/technologyOperation';
 import { technologyRoutingInfo } from '#/api/erp/technologyRouting';
 import { deptTreeSelect } from '#/api/system/user';
+import { DictTag } from '#/components/dict';
 import { SelectBom } from '#/components/select-bom';
 import { SelectMaterial } from '#/components/select-material';
 import { SelectProductionPlan } from '#/components/select-production-plan';
@@ -65,10 +66,10 @@ const title = computed(() => {
 const defaultValues: Partial<ProductionOrderForm> = {
   id: undefined,
   orderCode: undefined,
-  productionType: undefined,
+  productionType: '1',
   deptId: undefined,
   productionManager: undefined,
-  orderStatus: undefined,
+  orderStatus: 1,
   materialId: undefined,
   materialName: undefined,
   materialCode: undefined,
@@ -188,6 +189,7 @@ function handleProductionPlanSelect(row: null | ProductionPlanVO) {
   formData.value.requiredDeliveryDate = row.planEndTime;
   formData.value.orderQuantity = row.planQty;
   formData.value.bomVersion = row.bomVersion;
+  formData.value.salesOrderItemId = row.salesOrderItemId;
   displayMaterialName.value = row.materialName;
   displaySalesOrderCode.value = row.salesOrderCode;
 }
@@ -228,6 +230,7 @@ function handleSalesOrderItemSelect(rows: SalesOrderItemVO[]) {
   formData.value.materialId = row.materialId;
   formData.value.materialName = row.materialName;
   formData.value.materialCode = row.materialCode;
+  formData.value.salesOrderItemId = row.id;
   displayMaterialName.value = row.materialName || '';
   displaySalesOrderCode.value = row.orderCode || '';
 }
@@ -448,7 +451,7 @@ const [BasicModal, modalApi] = useVbenModal({
     } else {
       formData.value = cloneDeep(defaultValues);
       // 单据日期默认当前日期
-      formData.value.orderDate = new Date().toLocaleString('zh-CN', { hour12: false }).replaceAll('/', '-') + ' 00:00:00';
+      formData.value.orderDate = dayjs().format('YYYY-MM-DD');
       displayMaterialName.value = '';
       displaySalesOrderCode.value = '';
     }
@@ -494,6 +497,16 @@ async function handleClosed() {
         <Col :span="12">
           <FormItem label="生产订单编码" name="orderCode">
             <Input v-model:value="formData.orderCode" placeholder="系统自动生成" disabled />
+          </FormItem>
+        </Col>
+        <Col :span="12">
+          <FormItem label="单据日期" name="orderDate">
+            <DatePicker
+              v-model:value="formData.orderDate"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              style="width: 100%"
+            />
           </FormItem>
         </Col>
         <Col :span="12">
@@ -575,16 +588,7 @@ async function handleClosed() {
             />
           </FormItem>
         </Col>
-        <Col :span="12">
-          <FormItem label="单据日期" name="orderDate">
-            <DatePicker
-              v-model:value="formData.orderDate"
-              format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD"
-              style="width: 100%"
-            />
-          </FormItem>
-        </Col>
+        
         <Col :span="12">
           <FormItem label="生产类型" name="productionType" :rules="formRules.productionType">
             <Select
@@ -627,19 +631,16 @@ async function handleClosed() {
         </Col>
         <Col :span="12">
           <FormItem label="订单状态" name="orderStatus">
-            <RadioGroup
-              option-type="button"
-              button-style="solid"
-              v-model:value="formData.orderStatus"
-              :options="getDictOptions('production_order_status', true)"
-            />
+            <div class="flex items-center">
+              <DictTag :dicts="getDictOptions('production_order_status')" :value="formData.orderStatus" />
+            </div>
           </FormItem>
         </Col>
         <Col :span="24">
           <FormItem label="备注" name="remark" :label-col="{ span: 3 }">
             <TextArea
               v-model:value="formData.remark"
-              :placeholder="$t('ui.formRules.input')"
+              :placeholder="$t('ui.formRules.required')"
               :rows="3"
             />
           </FormItem>

@@ -3,24 +3,24 @@
 vscode默认配置文件会自动格式化/移除未使用依赖
 -->
 <script setup lang="ts">
-import type { RuleObject } from 'ant-design-vue/es/form';
+import type { FormInstance } from 'antdv-next';
+import type { Rule } from 'antdv-next/dist/form/types';
+
+import type { CrmInvoiceForm } from '#/api/crm/crmInvoice/model';
+
 import { computed, ref } from 'vue';
-
-import { Input, Textarea, Select, RadioGroup, CheckboxGroup, DatePicker, Form, FormItem } from 'ant-design-vue';
-import { ImageUpload, FileUpload } from '#/components/upload';
-import { Tinymce } from '#/components/tinymce';
-import { getPopupContainer } from '@vben/utils';
-import { pick } from 'lodash-es';
-
-import { getDictOptions } from '#/utils/dict';
 
 import { useVbenDrawer } from '@vben/common-ui';
 import { $t } from '@vben/locales';
+import { getPopupContainer } from '@vben/utils';
 import { cloneDeep } from '@vben/utils';
 
-import { useVbenForm } from '#/adapter/form';
+import { DatePicker, Form, FormItem, Input, Select, TextArea } from 'antdv-next';
+import { pick } from 'lodash-es';
+
 import { crmInvoiceAdd, crmInvoiceInfo, crmInvoiceUpdate } from '#/api/crm/crmInvoice';
-import type { CrmInvoiceForm } from '#/api/crm/crmInvoice/model';
+import { getDictOptions } from '#/utils/dict';
+import { useBeforeCloseDiff } from '#/utils/popup';
 
 const emit = defineEmits<{ reload: [] }>();
 
@@ -74,27 +74,32 @@ const defaultValues: Partial<CrmInvoiceForm> = {
  */
 const formData = ref(defaultValues);
 
-type AntdFormRules<T> = Partial<Record<keyof T, RuleObject[]>> & {
-  [key: string]: RuleObject[];
+type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
+  [key: string]: Rule[];
 };
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<CrmInvoiceForm>>({
-});
+const formRules = ref<AntdFormRules<CrmInvoiceForm>>({});
 
-/**
- * useForm解构出表单方法
- */
-const { validate, validateInfos, resetFields } = Form.useForm(
-  formData,
-  formRules,
+const formInstance = ref<FormInstance>();
+
+function customFormValueGetter() {
+  return JSON.stringify(formData.value);
+}
+
+const { onBeforeClose, markInitialized, resetInitialized } = useBeforeCloseDiff(
+  {
+    initializedGetter: customFormValueGetter,
+    currentGetter: customFormValueGetter,
+  },
 );
 
 const [BasicDrawer, drawerApi] = useVbenDrawer({
   class: 'w-[550px]',
   fullscreenButton: false,
   closeOnClickModal: false,
+  onBeforeClose,
   onClosed: handleCancel,
   onConfirm: handleConfirm,
   onOpenChange: async (isOpen) => {
@@ -119,123 +124,124 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
 
 async function handleConfirm() {
   try {
-    drawerApi.drawerLoading(true);
-    await validate();
+    drawerApi.lock(true);
+     await formInstance.value?.validate();
     // 可能会做数据处理 使用cloneDeep深拷贝
     const data = cloneDeep(formData.value);
     await (isUpdate.value ? crmInvoiceUpdate(data) : crmInvoiceAdd(data));
+    resetInitialized();
     emit('reload');
-    await handleCancel();
+    drawerApi.close();
   } catch (error) {
     console.error(error);
   } finally {
-    drawerApi.drawerLoading(false);
+    drawerApi.lock(false);
   }
 }
 
 async function handleCancel() {
-  drawerApi.close();
   formData.value = defaultValues;
-  resetFields();
+  formInstance.value?.resetFields();
+  resetInitialized();
 }
 </script>
 
 <template>
   <BasicDrawer :title="title">
-    <Form :label-col="{ span: 4 }">
-      <FormItem label="发票流水号" v-bind="validateInfos.serialNumber">
+    <Form :label-col="{ span: 4 }" ref="formInstance" :model="formData">
+      <FormItem label="发票流水号" name="serialNumber">
         <Input v-model:value="formData.serialNumber" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="客户ID" v-bind="validateInfos.customerId">
+      <FormItem label="客户ID" name="customerId">
         <Input v-model:value="formData.customerId" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="合同ID" v-bind="validateInfos.contractId">
+      <FormItem label="合同ID" name="contractId">
         <Input v-model:value="formData.contractId" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="发票类目ID" v-bind="validateInfos.categoryId">
+      <FormItem label="发票类目ID" name="categoryId">
         <Input v-model:value="formData.categoryId" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="发票名称" v-bind="validateInfos.name">
+      <FormItem label="发票名称" name="name">
         <Input v-model:value="formData.name" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="发票编号" v-bind="validateInfos.num">
+      <FormItem label="发票编号" name="num">
         <Input v-model:value="formData.num" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="合同金额" v-bind="validateInfos.price">
+      <FormItem label="合同金额" name="price">
         <Input v-model:value="formData.price" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="发票金额" v-bind="validateInfos.amount">
+      <FormItem label="发票金额" name="amount">
         <Input v-model:value="formData.amount" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="发票类型" v-bind="validateInfos.types">
+      <FormItem label="发票类型" name="types">
         <Select
           v-model:value="formData.types"
           :options="getDictOptions('invoice_type', true)"
-          :getPopupContainer="getPopupContainer"
+          :get-popup-container="getPopupContainer"
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="发票抬头" v-bind="validateInfos.title">
+      <FormItem label="发票抬头" name="title">
         <Input v-model:value="formData.title" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="纳税人识别号" v-bind="validateInfos.ident">
+      <FormItem label="纳税人识别号" name="ident">
         <Input v-model:value="formData.ident" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="开户行" v-bind="validateInfos.bank">
+      <FormItem label="开户行" name="bank">
         <Input v-model:value="formData.bank" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="开户账号" v-bind="validateInfos.account">
+      <FormItem label="开户账号" name="account">
         <Input v-model:value="formData.account" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="开票地址" v-bind="validateInfos.address">
+      <FormItem label="开票地址" name="address">
         <Input v-model:value="formData.address" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="电话" v-bind="validateInfos.tel">
+      <FormItem label="电话" name="tel">
         <Input v-model:value="formData.tel" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="邮寄联系人" v-bind="validateInfos.collectName">
+      <FormItem label="邮寄联系人" name="collectName">
         <Input v-model:value="formData.collectName" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="邮寄联系电话" v-bind="validateInfos.collectTel">
+      <FormItem label="邮寄联系电话" name="collectTel">
         <Input v-model:value="formData.collectTel" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="邮寄方式" v-bind="validateInfos.collectType">
+      <FormItem label="邮寄方式" name="collectType">
         <Select
           v-model:value="formData.collectType"
           :options="[]"
-          :getPopupContainer="getPopupContainer"
+          :get-popup-container="getPopupContainer"
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="邮寄邮箱" v-bind="validateInfos.collectEmail">
+      <FormItem label="邮寄邮箱" name="collectEmail">
         <Input v-model:value="formData.collectEmail" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="邮寄地址" v-bind="validateInfos.mailAddress">
+      <FormItem label="邮寄地址" name="mailAddress">
         <Input v-model:value="formData.mailAddress" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="开票方式" v-bind="validateInfos.invoiceType">
+      <FormItem label="开票方式" name="invoiceType">
         <Select
           v-model:value="formData.invoiceType"
           :options="[]"
-          :getPopupContainer="getPopupContainer"
+          :get-popup-container="getPopupContainer"
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="开票地址" v-bind="validateInfos.invoiceAddress">
+      <FormItem label="开票地址" name="invoiceAddress">
         <Input v-model:value="formData.invoiceAddress" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="发票状态 -1：开票撤回；0：待开票；1：已开票；2:已拒绝；3：申请作废；4:同意作废；5：拒绝作废；6：作废撤回；" v-bind="validateInfos.status">
+      <FormItem label="发票状态 -1：开票撤回；0：待开票；1：已开票；2:已拒绝；3：申请作废；4:同意作废；5：拒绝作废；6：作废撤回；" name="status">
         <Select
           v-model:value="formData.status"
           :options="getDictOptions('invoice_status', true)"
-          :getPopupContainer="getPopupContainer"
+          :get-popup-container="getPopupContainer"
           :placeholder="$t('ui.formRules.selectRequired')"
         />
       </FormItem>
-      <FormItem label="作废状态: 0，默认；-1，撤回；1，待审核；2，审核通过；3，审核未通过" v-bind="validateInfos.invalid">
+      <FormItem label="作废状态: 0，默认；-1，撤回；1，待审核；2，审核通过；3，审核未通过" name="invalid">
         <Input v-model:value="formData.invalid" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="开票日期" v-bind="validateInfos.billDate">
+      <FormItem label="开票日期" name="billDate">
         <!-- 需要自行调整参数 -->
         <DatePicker 
           v-model:value="formData.billDate"
@@ -243,7 +249,7 @@ async function handleCancel() {
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="实际开票日期" v-bind="validateInfos.realDate">
+      <FormItem label="实际开票日期" name="realDate">
         <!-- 需要自行调整参数 -->
         <DatePicker 
           v-model:value="formData.realDate"
@@ -251,29 +257,29 @@ async function handleCancel() {
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </FormItem>
-      <FormItem label="备注内容" v-bind="validateInfos.mark">
-        <Textarea 
+      <FormItem label="备注内容" name="mark">
+        <TextArea
           v-model:value="formData.mark" 
           :placeholder="$t('ui.formRules.required')" 
           :rows="4" 
         />
       </FormItem>
-      <FormItem label="开票备注" v-bind="validateInfos.remark">
+      <FormItem label="开票备注" name="remark">
         <Input v-model:value="formData.remark" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="业务员备注" v-bind="validateInfos.cardRemark">
+      <FormItem label="业务员备注" name="cardRemark">
         <Input v-model:value="formData.cardRemark" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="财务备注" v-bind="validateInfos.financeRemark">
+      <FormItem label="财务备注" name="financeRemark">
         <Input v-model:value="formData.financeRemark" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="关联审批ID" v-bind="validateInfos.linkId">
+      <FormItem label="关联审批ID" name="linkId">
         <Input v-model:value="formData.linkId" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="撤销申请ID" v-bind="validateInfos.revokeId">
+      <FormItem label="撤销申请ID" name="revokeId">
         <Input v-model:value="formData.revokeId" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
-      <FormItem label="关联付款单ID" v-bind="validateInfos.linkBill">
+      <FormItem label="关联付款单ID" name="linkBill">
         <Input v-model:value="formData.linkBill" :placeholder="$t('ui.formRules.required')" />
       </FormItem>
     </Form>

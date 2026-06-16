@@ -188,7 +188,8 @@ const selectSalesOrderItemRef = ref<InstanceType<typeof SelectSalesOrderItem>>()
 function handleSalesOrderItemSelect(rows: SalesOrderItemVO[]) {
   if (rows.length === 0) return;
   const item = rows[0] as SalesOrderItemVO & { materialCode?: string; materialId?: any; materialName?: string; };
-  formData.value.salesOrderId = item.id;
+  formData.value.salesOrderItemId = item.id;
+  formData.value.salesOrderId = item.orderId;
   formData.value.salesOrderCode = item.orderCode;
   formData.value.planEndTime = item.requiredDeliveryDate;
   if (!formData.value.planQty && item.quantity) {

@@ -172,6 +172,8 @@ function handleProductionOrderSelect(order: any) {
     currentEditRow.value.model=order.model;
     currentEditRow.value.unitName=order.unitName;
     currentEditRow.value.inboundQuantity=order.quantity;
+    currentEditRow.value.salesOrderCode=order.salesOrderCode;
+    currentEditRow.value.salesOrderItemId=order.salesOrderItemId;
   } else if (!currentEditRow.value) {
     // 没有选中行时，替换整个明细列表
     inboundItemList.value = (order?.itemList ?? []).map((item: any) => ({

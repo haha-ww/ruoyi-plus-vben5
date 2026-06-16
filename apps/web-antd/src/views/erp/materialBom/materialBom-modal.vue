@@ -132,14 +132,14 @@ function handleMaterialSelect(rows: MaterialInfoVO[]) {
   }
 }
 
-function handleBomSelect(rows: MaterialBomVO[]) {
-  if (rows.length > 0 && currentEditRow.value) {
-    const selected = rows[0];
-    currentEditRow.value.bomId = selected.id;
-    currentEditRow.value.materialId = selected.materialId;
-    currentEditRow.value.materialName = selected.bomName;
-    currentEditRow.value.bomVersion = selected.bomCode;
-    currentEditRow.value.unitName = selected.unitName;
+function handleBomSelect(bom: MaterialBomVO) {
+  if (currentEditRow.value) {
+    currentEditRow.value.bomId = bom.id;
+    currentEditRow.value.materialId = bom.materialId;
+    currentEditRow.value.materialName = bom.bomName;
+    currentEditRow.value.materialCode = bom.bomCode;
+    currentEditRow.value.bomVersion = bom.version;
+    currentEditRow.value.unitName = bom.unitName;
   }
 }
 

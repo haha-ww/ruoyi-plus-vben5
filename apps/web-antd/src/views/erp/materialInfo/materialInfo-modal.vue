@@ -62,7 +62,7 @@ const defaultValues: Partial<MaterialInfoForm> = {
   taxRate: undefined,
   drawingNumber: undefined,
   drawingOssid: undefined,
-  disabled: '0',
+  status: '0',
   remark: undefined,
 };
 
@@ -244,11 +244,11 @@ async function handleClosed() {
         <!-- maxCount为1(默认)时只允许上传一个文件 会自动绑定为string而非string[] -->
         <FileUpload :max-count="1" v-model:value="formData.drawingOssid" />
       </FormItem>
-      <FormItem label="启用状态" name="disabled" :rules="formRules.disabled" class="col-span-1">
+      <FormItem label="启用状态" name="status" :rules="formRules.status" class="col-span-1">
         <RadioGroup
           option-type="button"
           button-style="solid"
-          v-model:value="formData.disabled"
+          v-model:value="formData.status"
           :options="getDictOptions('sys_normal_disable', true)"
         />
       </FormItem>

@@ -451,3 +451,29 @@ export interface SalesOrderQuery extends PageQuery {
     */
   params?: any;
 }
+export interface SalesOrderStepVo {
+  /**
+     * 单据类型标识（sales_order/production_plan/production_order/production_inbound/sales_outbound）
+     */
+  docType:  string;
+  /**
+     * 单据类型名称（销售订单/计划与MRP/生产制造工单/下线完工入库/销售出库物流）
+     */
+  docTypeName: string;
+  /**
+     * 单据编码（关联单据的主单据号）
+     */
+  docCode?: string;
+  /**
+     * 总数量（关联单据数）
+     */
+  totalCount: number;
+  /**
+     * 百分比（总数量/销售订单明细数 * 100）
+     */
+  percentage: number;
+  /**
+     * 状态文本（待处理、进行中、已完成）
+     */
+  statusText: string;
+}

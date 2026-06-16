@@ -1,4 +1,4 @@
-import type { SalesOrderForm, SalesOrderQuery, SalesOrderVO } from './model';
+import type { SalesOrderForm, SalesOrderQuery, SalesOrderStepVo,SalesOrderVO } from './model';
 
 import type { ID, IDS } from '#/api/common';
 import type { PageResult } from '#/api/common';
@@ -77,3 +77,13 @@ export function salesOrderApprove(data?: SalesOrderForm) {
 export function salesOrderUnApprove(data?: SalesOrderForm) {
   return alovaInstance.putWithMsg<void>(`/erp/salesOrder/reverseApproval`, data);
 }
+
+/**
+ * 查询销售订单全流程跟踪步骤
+ * @param id id
+ * @returns void
+ */
+export function salesOrderWorkflow(salesOrderItemId?: number) {
+  return alovaInstance.getWithMsg<SalesOrderStepVo[]>(`/erp/salesOrder/workflow`, { params: { salesOrderItemId } });
+}
+

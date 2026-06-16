@@ -1,266 +1,217 @@
-<script lang="ts" setup>
-import type {
-  WorkbenchProjectItem,
-  WorkbenchQuickNavItem,
-  WorkbenchTodoItem,
-  WorkbenchTrendItem,
-} from '@vben/common-ui';
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { Page } from '@vben/common-ui';
+import { useUserStore } from '@vben/stores';
 
 import {
-  AnalysisChartCard,
-  WorkbenchHeader,
-  WorkbenchProject,
-  WorkbenchQuickNav,
-  WorkbenchTodo,
-  WorkbenchTrends,
-} from '@vben/common-ui';
-import { preferences } from '@vben/preferences';
-import { useUserStore } from '@vben/stores';
-import { openWindow } from '@vben/utils';
+  CalendarOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
+  SettingOutlined,
+  ShoppingCartOutlined,
+  TeamOutlined,
+} from '@antdv-next/icons';
 
-import AnalyticsVisitsSource from '../analytics/analytics-visits-source.vue';
+defineOptions({ name: 'Workspace' });
 
 const userStore = useUserStore();
+const userInfo = computed(() => userStore.userInfo);
 
-// 这是一个示例数据，实际项目中需要根据实际情况进行调整
-// url 也可以是内部路由，在 navTo 方法中识别处理，进行内部跳转
-// 例如：url: /dashboard/workspace
-const projectItems: WorkbenchProjectItem[] = [
-  {
-    color: '',
-    content: '不要等待机会，而要创造机会。',
-    date: '2021-04-01',
-    group: '开源组',
-    icon: 'carbon:logo-github',
-    title: 'Github',
-    url: 'https://github.com',
-  },
-  {
-    color: '#3fb27f',
-    content: '现在的你决定将来的你。',
-    date: '2021-04-01',
-    group: '算法组',
-    icon: 'ion:logo-vue',
-    title: 'Vue',
-    url: 'https://vuejs.org',
-  },
-  {
-    color: '#e18525',
-    content: '没有什么才能比努力更重要。',
-    date: '2021-04-01',
-    group: '上班摸鱼',
-    icon: 'ion:logo-html5',
-    title: 'Html5',
-    url: 'https://developer.mozilla.org/zh-CN/docs/Web/HTML',
-  },
-  {
-    color: '#bf0c2c',
-    content: '热情和欲望可以突破一切难关。',
-    date: '2021-04-01',
-    group: 'UI',
-    icon: 'ion:logo-angular',
-    title: 'Angular',
-    url: 'https://angular.io',
-  },
-  {
-    color: '#00d8ff',
-    content: '健康的身体是实现目标的基石。',
-    date: '2021-04-01',
-    group: '技术牛',
-    icon: 'bx:bxl-react',
-    title: 'React',
-    url: 'https://reactjs.org',
-  },
-  {
-    color: '#EBD94E',
-    content: '路是走出来的，而不是空想出来的。',
-    date: '2021-04-01',
-    group: '架构组',
-    icon: 'ion:logo-javascript',
-    title: 'Js',
-    url: 'https://developer.mozilla.org/zh-CN/docs/Web/JavaScript',
-  },
-];
+// 当前时间
+const currentTime = ref(new Date());
+let timer: null | ReturnType<typeof setInterval> = null;
 
-// 同样，这里的 url 也可以使用以 http 开头的外部链接
-const quickNavItems: WorkbenchQuickNavItem[] = [
+onMounted(() => {
+  timer = setInterval(() => {
+    currentTime.value = new Date();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer);
+  }
+});
+
+// 问候语
+const greeting = computed(() => {
+  const hour = currentTime.value.getHours();
+  if (hour < 6) return '凌晨好';
+  if (hour < 9) return '早上好';
+  if (hour < 12) return '上午好';
+  if (hour < 14) return '中午好';
+  if (hour < 17) return '下午好';
+  if (hour < 19) return '傍晚好';
+  return '晚上好';
+});
+
+// 格式化日期
+const formattedDate = computed(() => {
+  const d = currentTime.value;
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const weekDay = weekDays[d.getDay()!];
+  return `${y}年${m}月${day}日 星期${weekDay}`;
+});
+
+const formattedTime = computed(() => {
+  const d = currentTime.value;
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${min}:${s}`;
+});
+
+// 快捷入口
+const shortcuts = [
   {
-    color: '#1fdaca',
-    icon: 'ion:home-outline',
-    title: '首页',
-    url: '/',
+    title: '客户管理',
+    description: '管理客户信息、跟进记录与合同',
+    icon: TeamOutlined,
+    color: '#1677ff',
+    bgColor: '#e6f4ff',
+    path: '/crm/crmCustomer',
   },
   {
-    color: '#bf0c2c',
-    icon: 'ion:grid-outline',
-    title: '仪表盘',
-    url: '/dashboard',
+    title: '销售订单',
+    description: '查看和管理销售订单',
+    icon: ShoppingCartOutlined,
+    color: '#52c41a',
+    bgColor: '#f6ffed',
+    path: '/erp/salesOrder',
   },
   {
-    color: '#e18525',
-    icon: 'ion:layers-outline',
-    title: '组件',
-    url: '/demos/features/icons',
+    title: '生产计划',
+    description: '排产计划与甘特图管理',
+    icon: CalendarOutlined,
+    color: '#fa8c16',
+    bgColor: '#fff7e6',
+    path: '/erp/productionPlan',
   },
   {
-    color: '#3fb27f',
-    icon: 'ion:settings-outline',
+    title: '物料管理',
+    description: '物料信息、BOM与库存管理',
+    icon: FileTextOutlined,
+    color: '#722ed1',
+    bgColor: '#f9f0ff',
+    path: '/erp/materialInfo',
+  },
+  {
     title: '系统管理',
-    url: '/demos/features/login-expired', // 这里的 URL 是示例，实际项目中需要根据实际情况进行调整
+    description: '用户、角色、菜单与字典配置',
+    icon: SettingOutlined,
+    color: '#eb2f96',
+    bgColor: '#fff0f6',
+    path: '/system/user',
   },
   {
-    color: '#4daf1bc9',
-    icon: 'ion:key-outline',
-    title: '权限管理',
-    url: '/demos/access/page-control',
-  },
-  {
-    color: '#00d8ff',
-    icon: 'ion:bar-chart-outline',
-    title: '图表',
-    url: '/analytics',
+    title: '工作流',
+    description: '流程定义、部署与任务管理',
+    icon: ClockCircleOutlined,
+    color: '#13c2c2',
+    bgColor: '#e6fffb',
+    path: '/workflow/processDefinition',
   },
 ];
-
-const todoItems = ref<WorkbenchTodoItem[]>([
-  {
-    completed: false,
-    content: `审查最近提交到Git仓库的前端代码，确保代码质量和规范。`,
-    date: '2024-07-30 11:00:00',
-    title: '审查前端代码提交',
-  },
-  {
-    completed: true,
-    content: `检查并优化系统性能，降低CPU使用率。`,
-    date: '2024-07-30 11:00:00',
-    title: '系统性能优化',
-  },
-  {
-    completed: false,
-    content: `进行系统安全检查，确保没有安全漏洞或未授权的访问。 `,
-    date: '2024-07-30 11:00:00',
-    title: '安全检查',
-  },
-  {
-    completed: false,
-    content: `更新项目中的所有npm依赖包，确保使用最新版本。`,
-    date: '2024-07-30 11:00:00',
-    title: '更新项目依赖',
-  },
-  {
-    completed: false,
-    content: `修复用户报告的页面UI显示问题，确保在不同浏览器中显示一致。 `,
-    date: '2024-07-30 11:00:00',
-    title: '修复UI显示问题',
-  },
-]);
-const trendItems: WorkbenchTrendItem[] = [
-  {
-    avatar: 'svg:avatar-1',
-    content: `在 <a>开源组</a> 创建了项目 <a>Vue</a>`,
-    date: '刚刚',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-2',
-    content: `关注了 <a>威廉</a> `,
-    date: '1个小时前',
-    title: '艾文',
-  },
-  {
-    avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
-    date: '1天前',
-    title: '克里斯',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写一个Vite插件</a> `,
-    date: '2天前',
-    title: 'Vben',
-  },
-  {
-    avatar: 'svg:avatar-1',
-    content: `回复了 <a>杰克</a> 的问题 <a>如何进行项目优化？</a>`,
-    date: '3天前',
-    title: '皮特',
-  },
-  {
-    avatar: 'svg:avatar-2',
-    content: `关闭了问题 <a>如何运行项目</a> `,
-    date: '1周前',
-    title: '杰克',
-  },
-  {
-    avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
-    date: '1周前',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `推送了代码到 <a>Github</a>`,
-    date: '2021-04-01 20:00',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写使用 Admin Vben</a> `,
-    date: '2021-03-01 20:00',
-    title: 'Vben',
-  },
-];
-
-const router = useRouter();
-
-// 这是一个示例方法，实际项目中需要根据实际情况进行调整
-// This is a sample method, adjust according to the actual project requirements
-function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
-  if (nav.url?.startsWith('http')) {
-    openWindow(nav.url);
-    return;
-  }
-  if (nav.url?.startsWith('/')) {
-    router.push(nav.url).catch((error) => {
-      console.error('Navigation failed:', error);
-    });
-  } else {
-    console.warn(`Unknown URL for navigation item: ${nav.title} -> ${nav.url}`);
-  }
-}
 </script>
 
 <template>
-  <div class="p-5">
-    <WorkbenchHeader
-      :avatar="userStore.userInfo?.avatar || preferences.app.defaultAvatar"
-    >
-      <template #title>
-        早安, {{ userStore.userInfo?.realName }}, 开始您一天的工作吧！
-      </template>
-      <template #description> 今日晴，20℃ - 32℃！ </template>
-    </WorkbenchHeader>
-
-    <div class="mt-5 flex flex-col lg:flex-row">
-      <div class="mr-4 w-full lg:w-3/5">
-        <WorkbenchProject :items="projectItems" title="项目" @click="navTo" />
-        <WorkbenchTrends :items="trendItems" class="mt-5" title="最新动态" />
+  <Page>
+    <div class="workspace-container flex flex-col gap-6">
+      <!-- 欢迎横幅 -->
+      <div
+        class="welcome-banner relative overflow-hidden rounded-xl p-8"
+        style="
+          background: linear-gradient(
+            135deg,
+            #1677ff 0%,
+            #4096ff 50%,
+            #69b1ff 100%
+          );
+        "
+      >
+        <div class="relative z-10 flex items-center justify-between">
+          <div class="text-white">
+            <div class="mb-2 flex items-center gap-3">
+              <span class="text-3xl font-bold">
+                {{ greeting }}，{{ userInfo?.realName || '用户' }}
+              </span>
+            </div>
+            <p class="text-lg text-white/80">欢迎使用中台管理系统，祝您工作顺利！</p>
+          </div>
+          <div class="hidden text-right text-white/90 md:block">
+            <div class="text-4xl font-light tracking-wider">
+              {{ formattedTime }}
+            </div>
+            <div class="mt-1 text-sm text-white/70">{{ formattedDate }}</div>
+          </div>
+        </div>
+        <!-- 装饰圆 -->
+        <div
+          class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"
+        ></div>
+        <div
+          class="absolute -bottom-8 right-20 h-24 w-24 rounded-full bg-white/5"
+        ></div>
       </div>
-      <div class="w-full lg:w-2/5">
-        <WorkbenchQuickNav
-          :items="quickNavItems"
-          class="mt-5 lg:mt-0"
-          title="快捷导航"
-          @click="navTo"
-        />
-        <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" />
-        <AnalysisChartCard class="mt-5" title="访问来源">
-          <AnalyticsVisitsSource />
-        </AnalysisChartCard>
+
+      <!-- 快捷入口 -->
+      <div>
+        <h3 class="mb-4 text-lg font-semibold">快捷入口</h3>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <RouterLink
+            v-for="item in shortcuts"
+            :key="item.path"
+            :to="item.path"
+            class="shortcut-card group flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+          >
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
+              :style="{ backgroundColor: item.bgColor }"
+            >
+              <component
+                :is="item.icon"
+                class="text-xl"
+                :style="{ color: item.color }"
+              />
+            </div>
+            <div class="min-w-0">
+              <div class="text-base font-medium">{{ item.title }}</div>
+              <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ item.description }}
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+      </div>
+
+      <!-- 底部提示 -->
+      <div
+        class="rounded-xl border border-gray-100 bg-white p-6 text-center dark:border-gray-800 dark:bg-gray-900"
+      >
+        <p class="text-sm text-gray-400">
+          {{ new Date().getFullYear() }} © 企业中台管理系统
+        </p>
       </div>
     </div>
-  </div>
+  </Page>
 </template>
+
+<style scoped>
+.welcome-banner {
+  min-height: 140px;
+}
+
+.shortcut-card {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.shortcut-card:hover {
+  border-color: transparent;
+}
+</style>

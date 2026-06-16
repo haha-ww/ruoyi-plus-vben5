@@ -135,7 +135,7 @@ export const columns: VxeGridProps['columns'] = [
   { title: '计划单号', field: 'planCode', minWidth: 160 },
   { title: '产品名称', field: 'materialName', minWidth: 150 },
   { title: '计划数量', field: 'planQty', width: 100, align: 'right' },
-  { title: '实际数量', field: 'actualQty', width: 100, align: 'right' },
+  { title: '完成数量', field: 'actualQty', width: 100, align: 'right' },
   {
     title: '完成率',
     field: 'actualQty1',

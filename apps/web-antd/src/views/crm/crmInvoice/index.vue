@@ -5,8 +5,9 @@ import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmInvoiceForm } from '#/api/crm/crmInvoice/model';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
+import { getPopupContainer } from '@vben/utils';
 
-import { Modal, Popconfirm, Space } from 'ant-design-vue';
+import { Modal, Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
@@ -14,7 +15,7 @@ import {
   crmInvoiceList,
   crmInvoiceRemove,
 } from '#/api/crm/crmInvoice';
-import { commonDownloadExcel } from '#/utils/file/download';
+import { useBlobExport } from '#/utils/file/export';
 
 import crmInvoiceDrawer from './crmInvoice-drawer.vue';
 import { columns, querySchema } from './data';
@@ -109,16 +110,12 @@ function handleMultiDelete() {
     },
   });
 }
-
-function handleDownloadExcel() {
-  commonDownloadExcel(
-    crmInvoiceExport,
-    '客户-发票管理数据',
-    tableApi.formApi.form.values,
-    {
-      fieldMappingTime: formOptions.fieldMappingTime,
-    },
-  );
+const { exportBlob, exportLoading, buildExportFileName } =
+  useBlobExport(crmInvoiceExport);
+async function handleDownloadExcel() {
+  const formValues = await tableApi.formApi.getValues();
+  const fileName = buildExportFileName('客户-发票管理数据');
+  exportBlob({ data: formValues, fileName });
 }
 </script>
 
@@ -129,6 +126,8 @@ function handleDownloadExcel() {
         <Space>
           <a-button
             v-access:code="['crm:crmInvoice:export']"
+            :loading="exportLoading"
+            :disabled="exportLoading"
             @click="handleDownloadExcel"
           >
             {{ $t('pages.common.export') }}
@@ -160,6 +159,7 @@ function handleDownloadExcel() {
             {{ $t('pages.common.edit') }}
           </action-button>
           <Popconfirm
+            :get-popup-container="getPopupContainer"
             placement="left"
             title="确认删除？"
             @confirm="handleDelete(row)"

@@ -6,7 +6,7 @@ import type { SalesOrderForm } from '#/api/erp/salesOrder/model';
 
 import { Page, useVbenModal } from '@vben/common-ui';
 
-import { Popconfirm, Space } from 'antdv-next';
+import { Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
@@ -19,6 +19,7 @@ import { useBlobExport } from '#/utils/file/export';
 
 import { columns, querySchema } from './data';
 import salesOrderModal from './salesOrder-modal.vue';
+import salesOrderTrackingModal from './salesOrder-tracking-modal.vue';
 
 const formOptions: VbenFormProps = {
   commonConfig: {
@@ -82,6 +83,15 @@ const [SalesOrderModal, modalApi] = useVbenModal({
   connectedComponent: salesOrderModal,
 });
 
+const [SalesOrderTrackingModal, trackingModalApi] = useVbenModal({
+  connectedComponent: salesOrderTrackingModal,
+});
+
+function handleTracking(row: Required<SalesOrderForm>) {
+  trackingModalApi.setData({ id: row.id });
+  trackingModalApi.open();
+}
+
 function handleAdd() {
   modalApi.setData({ viewMode: true});
   modalApi.open();
@@ -130,7 +140,7 @@ function handleMultiDelete() {
   window.modal.confirm({
     title: '提示',
     okType: 'danger',
-    content: `确认删除选中的${ids.length}条记录吗？`,
+    content: `确认作废选中的${ids.length}条记录吗？`,
     onOk: async () => {
       await salesOrderRemove(ids);
       await tableApi.query();
@@ -167,7 +177,7 @@ async function handleExport() {
             v-access:code="['erp:salesOrder:remove']"
             @click="handleMultiDelete"
           >
-            {{ $t('pages.common.delete') }}
+            作废
           </a-button>
           <a-button
             type="primary"
@@ -185,6 +195,12 @@ async function handleExport() {
             @click.stop="handleView(row)"
           >
             查看
+          </action-button>
+          <action-button
+            v-access:code="['erp:salesOrder:view']"
+            @click.stop="handleTracking(row)"
+          >
+            流程追踪
           </action-button>
           <action-button
           v-if="row.orderStatus === 10"
@@ -209,18 +225,10 @@ async function handleExport() {
           >
             反审批
           </action-button>
-          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
-            <action-button
-              danger
-              v-access:code="['erp:salesOrder:remove']"
-              @click.stop=""
-            >
-              {{ $t('pages.common.delete') }}
-            </action-button>
-          </Popconfirm>
         </Space>
       </template>
     </BasicTable>
     <SalesOrderModal @reload="tableApi.query()" />
+    <SalesOrderTrackingModal />
   </Page>
 </template>

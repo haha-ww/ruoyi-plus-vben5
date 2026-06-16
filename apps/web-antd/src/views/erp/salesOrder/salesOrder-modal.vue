@@ -295,13 +295,14 @@ const columns: TableColumnsType<SalesOrderItemVO> = [
     title: '税率(%)',
     dataIndex: 'taxRate',
     key: 'taxRate',
-    width: 80,
+    width: 120,
     render: (_: any, record: SalesOrderItemVO) => (
-      <InputNumber
-        max={100}
-        min={0}
-        placeholder="请输入"
-        precision={2}
+      <Select
+        allowClear
+        getPopupContainer={getPopupContainer}
+        onChange={() => calculateTaxAmount(record)}
+        options={getDictOptions('tax_rate', true)}
+        placeholder="请选择"
         style={{ width: '100%' }}
         v-model:value={record.taxRate}
       />
@@ -326,12 +327,6 @@ const columns: TableColumnsType<SalesOrderItemVO> = [
         value-format="YYYY-MM-DD"
       />
     ),
-  },
-  {
-    title: '库存数量',
-    dataIndex: 'stockQuantity',
-    key: 'stockQuantity',
-    width: 80,
   },
   {
     title: '操作',

@@ -6,7 +6,7 @@ import type { CrmContractForm } from '#/api/crm/crmContract/model';
 
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
-import { Modal, Popconfirm, Space } from 'ant-design-vue';
+import { Popconfirm, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
@@ -14,7 +14,7 @@ import {
   crmContractList,
   crmContractRemove,
 } from '#/api/crm/crmContract';
-import { commonDownloadExcel } from '#/utils/file/download';
+import { useBlobExport } from '#/utils/file/export';
 
 import crmContractDrawer from './crmContract-drawer.vue';
 import { columns, querySchema } from './data';
@@ -99,7 +99,7 @@ async function handleDelete(row: Required<CrmContractForm>) {
 function handleMultiDelete() {
   const rows = tableApi.grid.getCheckboxRecords();
   const ids = rows.map((row: Required<CrmContractForm>) => row.id);
-  Modal.confirm({
+  window.modal.confirm({
     title: '提示',
     okType: 'danger',
     content: `确认删除选中的${ids.length}条记录吗？`,
@@ -110,15 +110,12 @@ function handleMultiDelete() {
   });
 }
 
-function handleDownloadExcel() {
-  commonDownloadExcel(
-    crmContractExport,
-    '客户-合同管理数据',
-    tableApi.formApi.form.values,
-    {
-      fieldMappingTime: formOptions.fieldMappingTime,
-    },
-  );
+const { exportBlob, exportLoading, buildExportFileName } = useBlobExport(crmContractExport);
+
+async function handleExport() {
+  const formValues = await tableApi.formApi.getValues();
+  const fileName = buildExportFileName('客户-合同管理数据');
+  exportBlob({ data: formValues, fileName });
 }
 </script>
 
@@ -129,7 +126,9 @@ function handleDownloadExcel() {
         <Space>
           <a-button
             v-access:code="['crm:crmContract:export']"
-            @click="handleDownloadExcel"
+            :loading="exportLoading"
+            :disabled="exportLoading"
+            @click="handleExport"
           >
             {{ $t('pages.common.export') }}
           </a-button>
@@ -159,11 +158,7 @@ function handleDownloadExcel() {
           >
             {{ $t('pages.common.edit') }}
           </action-button>
-          <Popconfirm
-            placement="left"
-            title="确认删除？"
-            @confirm="handleDelete(row)"
-          >
+          <Popconfirm placement="left" title="确认删除？" @confirm="handleDelete(row)">
             <action-button
               danger
               v-access:code="['crm:crmContract:remove']"

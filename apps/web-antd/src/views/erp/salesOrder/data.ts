@@ -50,6 +50,7 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '销售订单编码',
     field: 'orderCode',
+    width: 150,
   },
   {
     title: '客户名称',
@@ -63,6 +64,7 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '销售人员',
     field: 'salesPersonName',
+    width: 80,
   },
   {
     title: '订单来源',
@@ -75,6 +77,7 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '订单状态',
     field: 'orderStatus',
+    width: 80,
     slots: {
       default: ({ row }) => {
         // 可选从DictEnum中获取 DictEnum.SALES_ORDER_STATUS 便于维护
@@ -87,7 +90,7 @@ export const columns: VxeGridProps['columns'] = [
     fixed: 'right',
     slots: { default: 'action' },
     title: '操作',
-    width: 180,
+    width: 220,
   },
 ];
 

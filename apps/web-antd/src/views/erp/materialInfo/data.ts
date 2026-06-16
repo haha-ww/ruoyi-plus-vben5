@@ -83,7 +83,7 @@ export const querySchema: FormSchemaGetter = () => [
       buttonStyle: 'solid',
       optionType: 'button',
     },
-    fieldName: 'disabled',
+    fieldName: 'status',
     label: '启用状态',
   },
 ];
@@ -133,11 +133,11 @@ export const columns: VxeGridProps['columns'] = [
   },
   {
     title: '启用状态',
-    field: 'disabled',
+    field: 'status',
     slots: {
       default: ({ row }) => {
         // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
-        return renderDict(row.disabled, 'sys_normal_disable');
+        return renderDict(row.status, 'sys_normal_disable');
       },
     },
   },

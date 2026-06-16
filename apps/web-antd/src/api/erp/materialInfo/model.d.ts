@@ -1,15 +1,15 @@
-import type { PageQuery, BaseEntity } from '#/api/common';
+import type { BaseEntity, PageQuery } from '#/api/common';
 
 export interface MaterialInfoVO {
   /**
    * 主键
    */
-  id: string | number;
+  id: number | string;
 
   /**
    * 分类（表erp_material_category）
    */
-  categoryId: string | number;
+  categoryId: number | string;
 
   /**
    * 物料编码
@@ -34,12 +34,12 @@ export interface MaterialInfoVO {
   /**
    * 计量单位id（表 erp_material_unit）
    */
-  unitId: string | number;
+  unitId: number | string;
 
   /**
    * 供应商id（表 erp_supplier）
    */
-  supplierId: string | number;
+  supplierId: number | string;
 
   /**
    * 成本计价方式（字典 pricing_type）
@@ -84,12 +84,12 @@ export interface MaterialInfoVO {
   /**
    * 图纸ossid
    */
-  drawingOssid: string | number;
+  drawingOssid: number | string;
 
   /**
    * 启用状态（字典 sys_normal_disable）
    */
-  disabled: number;
+  status: number | string;
 
   /**
    * 备注
@@ -102,12 +102,12 @@ export interface MaterialInfoForm extends BaseEntity {
   /**
    * 主键
    */
-  id?: string | number;
+  id?: number | string;
 
   /**
    * 分类（表erp_material_category）
    */
-  categoryId?: string | number;
+  categoryId?: number | string;
 
   /**
    * 物料编码
@@ -132,12 +132,12 @@ export interface MaterialInfoForm extends BaseEntity {
   /**
    * 计量单位id（表 erp_material_unit）
    */
-  unitId?: string | number;
+  unitId?: number | string;
 
   /**
    * 供应商id（表 erp_supplier）
    */
-  supplierId?: string | number;
+  supplierId?: number | string;
 
   /**
    * 成本计价方式（字典 pricing_type）
@@ -182,12 +182,12 @@ export interface MaterialInfoForm extends BaseEntity {
   /**
    * 图纸ossid
    */
-  drawingOssid?: string | number;
+  drawingOssid?: number | string;
 
   /**
    * 启用状态（字典 sys_normal_disable）
    */
-  disabled?: number;
+  status?: number | string;
 
   /**
    * 备注
@@ -200,7 +200,7 @@ export interface MaterialInfoQuery extends PageQuery {
   /**
    * 分类（表erp_material_category）
    */
-  categoryId?: string | number;
+  categoryId?: number | string;
 
   /**
    * 物料编码
@@ -225,12 +225,12 @@ export interface MaterialInfoQuery extends PageQuery {
   /**
    * 计量单位id（表 erp_material_unit）
    */
-  unitId?: string | number;
+  unitId?: number | string;
 
   /**
    * 供应商id（表 erp_supplier）
    */
-  supplierId?: string | number;
+  supplierId?: number | string;
 
   /**
    * 成本计价方式（字典 pricing_type）
@@ -275,12 +275,12 @@ export interface MaterialInfoQuery extends PageQuery {
   /**
    * 图纸ossid
    */
-  drawingOssid?: string | number;
+  drawingOssid?: number | string;
 
   /**
    * 启用状态（字典 sys_normal_disable）
    */
-  disabled?: number;
+  status?: number | string;
 
   /**
     * 日期范围参数
