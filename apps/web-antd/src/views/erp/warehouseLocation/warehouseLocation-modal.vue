@@ -24,7 +24,7 @@ import {
 import { pick } from 'lodash-es';
 
 import { warehouseLocationAdd, warehouseLocationInfo, warehouseLocationUpdate } from '#/api/erp/warehouseLocation';
-import { listWarehouseSelect, listWarehouseLocationSelect } from '#/api/wcommon';
+import { listWarehouseLocationSelect, listWarehouseSelect } from '#/api/wcommon';
 import { getDictOptions } from '#/utils/dict';
 import { useBeforeCloseDiff } from '#/utils/popup';
 
