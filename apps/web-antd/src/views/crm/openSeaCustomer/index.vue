@@ -4,17 +4,24 @@ import type { VbenFormProps } from '@vben/common-ui';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 import type { CrmCustomerForm } from '#/api/crm/crmCustomer/model';
 
+import { ref } from 'vue';
+
 import { Page, useVbenDrawer } from '@vben/common-ui';
 
-import { Modal, Popconfirm, Space } from 'ant-design-vue';
+import { Checkbox, message, Modal, Popconfirm, Select, Space } from 'antdv-next';
 
 import { useVbenVxeGrid, vxeCheckboxChecked } from '#/adapter/vxe-table';
 import {
+  crmCustomerAssign,
+  crmCustomerCancelLost,
+  crmCustomerClaim,
   crmCustomerExport,
-  crmCustomerList,
+  crmCustomerMarkLost,
   crmCustomerRemove,
+  crmOpenSeaCustomerList,
 } from '#/api/crm/crmCustomer';
-import { commonDownloadExcel } from '#/utils/file/download';
+import { personnelStaffList } from '#/api/personnel/personnelStaff';
+import { useBlobExport } from '#/utils/file/export';
 
 import crmCustomerDrawer from './crmCustomer-drawer.vue';
 import { columns, querySchema } from './data';
@@ -57,7 +64,7 @@ const gridOptions: VxeGridProps = {
   proxyConfig: {
     ajax: {
       query: async ({ page }, formValues = {}) => {
-        return await crmCustomerList({
+        return await crmOpenSeaCustomerList({
           pageNum: page.currentPage,
           pageSize: page.pageSize,
           ...formValues,
@@ -110,16 +117,122 @@ function handleMultiDelete() {
   });
 }
 
-function handleDownloadExcel() {
-  commonDownloadExcel(
-    crmCustomerExport,
-    '客户-客户档案数据',
-    tableApi.formApi.form.values,
-    {
-      fieldMappingTime: formOptions.fieldMappingTime,
-    },
-  );
+const { exportBlob, exportLoading, buildExportFileName } = useBlobExport(crmCustomerExport);
+
+async function handleExport() {
+  const formValues = await tableApi.formApi.getValues();
+  const fileName = buildExportFileName('公海客户数据');
+  exportBlob({ data: formValues, fileName });
 }
+
+// 领取客户
+async function handleClaim(row: Required<CrmCustomerForm>) {
+  await crmCustomerClaim(row.id);
+  message.success('领取成功');
+  await tableApi.query();
+}
+
+function handleMultiClaim() {
+  const rows = tableApi.grid.getCheckboxRecords();
+  const ids = rows.map((row: Required<CrmCustomerForm>) => row.id);
+  Modal.confirm({
+    title: '提示',
+    content: `确认领取选中的${ids.length}条客户吗？`,
+    onOk: async () => {
+      for (const id of ids) {
+        await crmCustomerClaim(id);
+      }
+      message.success('领取成功');
+      await tableApi.query();
+    },
+  });
+}
+
+// 分配客户
+const assignVisible = ref(false);
+const assignUid = ref<number | string>('');
+const customerId = ref<number | string>('');
+const staffOptions = ref<{ label: string; value: number | string }[]>([]);
+// 转移类型复选框
+const transferCustomer = ref(true);
+const transferOrder = ref(false);
+const transferInvoice = ref(false);
+
+async function loadStaffOptions() {
+  const res = await personnelStaffList({ pageNum: 1, pageSize: 999 });
+  staffOptions.value = (res.rows ?? []).map((item: any) => ({
+    label: item.staffName ?? item.name,
+    value: item.userId ?? item.id,
+  }));
+}
+
+function openAssignModal(row: CrmCustomerForm) {
+  assignUid.value = '';
+  customerId.value = row.id;
+  transferCustomer.value = true;
+  transferOrder.value = false;
+  transferInvoice.value = false;
+  assignVisible.value = true;
+  loadStaffOptions();
+}
+
+function handleAssign(row: Required<CrmCustomerForm>) {
+  openAssignModal(row);
+}
+
+
+async function confirmAssign() {
+  if (!assignUid.value) {
+    message.warning('请选择接手人员');
+    return;
+  }
+  await crmCustomerAssign({
+    id: customerId.value,
+    transferCustomer: transferCustomer.value,
+    transferInvoice: transferInvoice.value,
+    transferOrder: transferOrder.value,
+    uid: assignUid.value,
+  });
+  message.success('分配成功');
+  assignVisible.value = false;
+  await tableApi.query();
+}
+
+function handleAssignUidChange(val: any) {
+  assignUid.value = val;
+}
+
+function filterStaffOption(input: string, option: any) {
+  return option.label?.toLowerCase().includes(input.toLowerCase());
+}
+
+function onTransferCustomerChange(e: any) {
+  transferCustomer.value = e.target.checked;
+}
+
+function onTransferOrderChange(e: any) {
+  transferOrder.value = e.target.checked;
+}
+
+function onTransferInvoiceChange(e: any) {
+  transferInvoice.value = e.target.checked;
+}
+
+// 标为流失
+async function handleMarkLost(row: Required<CrmCustomerForm>) {
+  await crmCustomerMarkLost(row.id);
+  message.success('已标为流失');
+  await tableApi.query();
+}
+
+
+// 取消流失
+async function handleCancelLost(row: Required<CrmCustomerForm>) {
+  await crmCustomerCancelLost(row.id);
+  message.success('已取消流失');
+  await tableApi.query();
+}
+
 </script>
 
 <template>
@@ -127,6 +240,14 @@ function handleDownloadExcel() {
     <BasicTable table-title="公海客户">
       <template #toolbar-tools>
         <Space>
+          <a-button
+            v-access:code="['crm:openSeaCustomer:export']"
+            :loading="exportLoading"
+            :disabled="exportLoading"
+            @click="handleExport"
+          >
+            {{ $t('pages.common.export') }}
+          </a-button>
           <a-button
             :disabled="!vxeCheckboxChecked(tableApi)"
             danger
@@ -146,13 +267,58 @@ function handleDownloadExcel() {
         </Space>
       </template>
       <template #action="{ row }">
-        <Space>
+        <Space wrap>
           <action-button
             v-access:code="['crm:openSeaCustomer:edit']"
             @click.stop="handleEdit(row)"
           >
             查看
           </action-button>
+          <Popconfirm
+            placement="left"
+            title="确认领取该客户？"
+            @confirm="handleClaim(row)"
+          >
+            <action-button
+              v-access:code="['crm:openSeaCustomer:collect']"
+              @click.stop=""
+            >
+              领取
+            </action-button>
+          </Popconfirm>
+          <action-button
+            v-access:code="['crm:openSeaCustomer:transfer']"
+            @click.stop="handleAssign(row)"
+          >
+            分配
+          </action-button>
+          <Popconfirm
+            placement="left"
+            title="确认标为流失？"
+            @confirm="handleMarkLost(row)"
+          >
+            <action-button
+              v-if="row.customerStatus != 3"
+              danger
+              v-access:code="['crm:openSeaCustomer:lost']"
+              @click.stop=""
+            >
+              标为流失
+            </action-button>
+          </Popconfirm>
+          <Popconfirm
+            placement="left"
+            title="确认取消流失？"
+            @confirm="handleCancelLost(row)"
+          >
+            <action-button
+              v-if="row.customerStatus == '3'"
+              v-access:code="['crm:openSeaCustomer:cancelLost']"
+              @click.stop=""
+            >
+              取消流失
+            </action-button>
+          </Popconfirm>
           <Popconfirm
             placement="left"
             title="确认删除？"
@@ -170,5 +336,40 @@ function handleDownloadExcel() {
       </template>
     </BasicTable>
     <CrmCustomerDrawer @reload="tableApi.query()" />
+
+    <!-- 分配客户弹窗 -->
+    <Modal
+      :open="assignVisible"
+      title="分配设置"
+      :confirm-loading="false"
+      @ok="confirmAssign"
+      @cancel="assignVisible = false"
+    >
+      <div style="padding: 16px 0; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: center;">
+          <span style="white-space: nowrap; margin-right: 8px;">接手人员：</span>
+          <Select
+            :value="assignUid"
+            :options="staffOptions"
+            placeholder="请选择企业成员"
+            show-search
+            :filter-option="filterStaffOption"
+            style="flex: 1;"
+            @change="handleAssignUidChange"
+          />
+        </div>
+        <div style="display: flex; gap: 24px;">
+          <Checkbox :checked="transferCustomer" @change="onTransferCustomerChange">
+            客户转移
+          </Checkbox>
+          <Checkbox :checked="transferOrder" @change="onTransferOrderChange">
+            订单转移
+          </Checkbox>
+          <Checkbox :checked="transferInvoice" @change="onTransferInvoiceChange">
+            发票转移
+          </Checkbox>
+        </div>
+      </div>
+    </Modal>
   </Page>
 </template>

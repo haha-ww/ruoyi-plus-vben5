@@ -17,6 +17,17 @@ export function crmCustomerList(params?: CrmCustomerQuery) {
 }
 
 /**
+ * 查询公海客户档案列表
+ * @param params
+ * @returns 客户-客户档案列表
+ */
+export function crmOpenSeaCustomerList(params?: CrmCustomerQuery) {
+  return requestClient.get<PageResult<CrmCustomerVO>>('/crm/crmCustomer/openSeaList', {
+    params,
+  });
+}
+
+/**
  * 查询客户下拉列表
  * @param params
  * @returns 客户-客户档案列表
@@ -72,4 +83,46 @@ export function crmCustomerUpdate(data: CrmCustomerForm) {
  */
 export function crmCustomerRemove(id: ID | IDS) {
   return requestClient.deleteWithMsg<void>(`/crm/crmCustomer/${id}`);
+}
+
+/**
+ * 领取公海客户
+ * @param id 客户id
+ * @returns void
+ */
+export function crmCustomerClaim(id: ID) {
+  return requestClient.putWithMsg<void>(`/crm/crmCustomer/collect/${id}`);
+}
+
+/**
+ * 分配公海客户
+ * @param data { ids, uid, transferCustomer, transferOrder, transferInvoice }
+ * @returns void
+ */
+export function crmCustomerAssign(data: {
+  id: number;
+  transferCustomer?: boolean;
+  transferInvoice?: boolean;
+  transferOrder?: boolean;
+  uid: number | string;
+}) {
+  return requestClient.putWithMsg<void>('/crm/crmCustomer/transfer', data);
+}
+
+/**
+ * 标为流失客户
+ * @param id 客户id
+ * @returns void
+ */
+export function crmCustomerMarkLost(id: ID) {
+  return requestClient.putWithMsg<void>(`/crm/crmCustomer/lost/${id}`);
+}
+
+/**
+ * 取消流失客户
+ * @param id 客户id
+ * @returns void
+ */
+export function crmCustomerCancelLost(id: ID) {
+  return requestClient.putWithMsg<void>(`/crm/crmCustomer/cancelLost/${id}`);
 }

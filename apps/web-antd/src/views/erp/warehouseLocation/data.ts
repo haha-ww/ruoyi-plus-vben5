@@ -1,15 +1,19 @@
 import type { FormSchemaGetter } from '#/adapter/form';
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
+import { getDictOptions } from '#/utils/dict';
+import { renderDict } from '#/utils/render';
 
 export const querySchema: FormSchemaGetter = () => [
   {
-    component: 'Input',
+    component: 'Select',
+    componentProps: {},
     fieldName: 'warehouseId',
     label: '所属仓库ID',
   },
   {
-    component: 'Input',
+    component: 'Select',
+    componentProps: {},
     fieldName: 'parentId',
     label: '父位置ID',
   },
@@ -26,9 +30,11 @@ export const querySchema: FormSchemaGetter = () => [
   {
     component: 'Select',
     componentProps: {
+      // 可选从DictEnum中获取 DictEnum.LOCATION_TYPE 便于维护
+      options: getDictOptions('location_type'),
     },
     fieldName: 'locationType',
-    label: '类型：1-区域 2-货架 3-货位 4-暂存区',
+    label: '类型',
   },
   {
     component: 'Input',
@@ -36,10 +42,10 @@ export const querySchema: FormSchemaGetter = () => [
     label: '完整路径编码',
   },
   {
-    component: 'RadioGroup',
+    component: 'Select',
     componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
+      // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
+      options: getDictOptions('sys_normal_disable'),
     },
     fieldName: 'status',
     label: '启用状态',
@@ -71,8 +77,14 @@ export const columns: VxeGridProps['columns'] = [
     field: 'locationName',
   },
   {
-    title: '类型：1-区域 2-货架 3-货位 4-暂存区',
+    title: '类型',
     field: 'locationType',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.LOCATION_TYPE 便于维护
+        return renderDict(row.locationType, 'location_type');
+      },
+    },
   },
   {
     title: '完整路径编码',
@@ -81,6 +93,12 @@ export const columns: VxeGridProps['columns'] = [
   {
     title: '启用状态',
     field: 'status',
+    slots: {
+      default: ({ row }) => {
+        // 可选从DictEnum中获取 DictEnum.SYS_NORMAL_DISABLE 便于维护
+        return renderDict(row.status, 'sys_normal_disable');
+      },
+    },
   },
   {
     field: 'action',
@@ -91,55 +109,3 @@ export const columns: VxeGridProps['columns'] = [
   },
 ];
 
-export const modalSchema: FormSchemaGetter = () => [
-  {
-    label: '库位ID',
-    fieldName: 'id',
-    component: 'Input',
-    dependencies: {
-      show: () => false,
-      triggerFields: [''],
-    },
-  },
-  {
-    label: '所属仓库ID',
-    fieldName: 'warehouseId',
-    component: 'Input',
-  },
-  {
-    label: '父位置ID',
-    fieldName: 'parentId',
-    component: 'Input',
-  },
-  {
-    label: '库位编码',
-    fieldName: 'locationCode',
-    component: 'Input',
-  },
-  {
-    label: '库位名称',
-    fieldName: 'locationName',
-    component: 'Input',
-  },
-  {
-    label: '类型：1-区域 2-货架 3-货位 4-暂存区',
-    fieldName: 'locationType',
-    component: 'Select',
-    componentProps: {
-    },
-  },
-  {
-    label: '完整路径编码',
-    fieldName: 'fullPath',
-    component: 'Input',
-  },
-  {
-    label: '启用状态',
-    fieldName: 'status',
-    component: 'RadioGroup',
-    componentProps: {
-      buttonStyle: 'solid',
-      optionType: 'button',
-    },
-  },
-];

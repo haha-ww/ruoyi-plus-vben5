@@ -3,7 +3,8 @@
 vscode默认配置文件会自动格式化/移除未使用依赖
 -->
 <script setup lang="ts">
-import type { RuleObject } from 'ant-design-vue/es/form';
+import type { FormInstance } from 'antdv-next';
+import type { Rule } from 'antdv-next/dist/form/types';
 
 import type { CrmCustomerForm } from '#/api/crm/crmCustomer/model';
 
@@ -18,7 +19,9 @@ import {
   FormItem,
   Input,
   Select,
-  Textarea,
+  TabPane,
+  Tabs,
+  TextArea,
   TreeSelect,
 } from 'antdv-next';
 import { pick } from 'lodash-es';
@@ -31,6 +34,7 @@ import {
 import { labelSelectList } from '#/api/crm/crmCustomerLabel';
 import { regionList } from '#/api/system/region';
 import { getDictOptions } from '#/utils/dict';
+import { useBeforeCloseDiff } from '#/utils/popup';
 
 import bill from '../crmCustomerBill/index.vue';
 import contract from '../crmCustomerContract/index.vue';
@@ -44,7 +48,7 @@ const emit = defineEmits<{ reload: [] }>();
 const visible = ref(false);
 const isUpdate = ref(false);
 const title = computed(() => {
-  return isUpdate.value ? $t('pages.common.edit') : $t('pages.common.add');
+  return isUpdate.value ? '查看' : $t('pages.common.add');
 });
 
 /**
@@ -82,27 +86,33 @@ const defaultValues: Partial<CrmCustomerForm> = {
  */
 const formData = ref(defaultValues);
 
-type AntdFormRules<T> = Partial<Record<keyof T, RuleObject[]>> & {
-  [key: string]: RuleObject[];
+
+type AntdFormRules<T> = Partial<Record<keyof T, Rule[]>> & {
+  [key: string]: Rule[];
 };
 /**
  * 表单校验规则
  */
-const formRules = ref<AntdFormRules<CrmCustomerForm>>({
+const formRules = ref<AntdFormRules<CrmContractForm>>({
   customerName: [{ required: true, message: '客户名称不能为空' }],
 });
 
-/**
- * useForm解构出表单方法
- */
-const { validate, validateInfos, resetFields } = Form.useForm(
-  formData,
-  formRules,
-);
+const formInstance = ref<FormInstance>();
 
+function customFormValueGetter() {
+  return JSON.stringify(formData.value);
+}
+
+const { onBeforeClose, markInitialized, resetInitialized } = useBeforeCloseDiff(
+  {
+    initializedGetter: customFormValueGetter,
+    currentGetter: customFormValueGetter,
+  },
+);
 const [BasicDrawer, drawerApi] = useVbenDrawer({
   class: 'w-[950px]',
   fullscreenButton: false,
+  onBeforeClose,
   closeOnClickModal: false,
   onClosed: handleCancel,
   onConfirm: handleConfirm,
@@ -122,34 +132,33 @@ const [BasicDrawer, drawerApi] = useVbenDrawer({
       const filterRecord = pick(record, Object.keys(defaultValues));
       formData.value = filterRecord;
     }
-    visible.value = true;
+    await markInitialized();
     drawerApi.drawerLoading(false);
   },
 });
 
 async function handleConfirm() {
   try {
-    drawerApi.drawerLoading(true);
-    await validate();
+     drawerApi.lock(true);
+    await formInstance.value?.validate();
     // 可能会做数据处理 使用cloneDeep深拷贝
     const data = cloneDeep(formData.value);
     data.customerLabel = data.customerLabel?.join(',');
     await (isUpdate.value ? crmCustomerUpdate(data) : crmCustomerAdd(data));
     resetInitialized();
     emit('reload');
-    await handleCancel();
+    drawerApi.close();
   } catch (error) {
     console.error(error);
   } finally {
-    drawerApi.drawerLoading(false);
+   drawerApi.lock(false);
   }
 }
 
 async function handleCancel() {
-  visible.value = false;
-  drawerApi.close();
   formData.value = defaultValues;
-  resetFields();
+  formInstance.value?.resetFields();
+  resetInitialized();
 }
 const labelList = ref([]);
 getLabelList();
@@ -168,12 +177,12 @@ async function setupRegionSelect() {
 
 <template>
   <BasicDrawer :title="title">
-    <a-tabs>
-      <a-tab-pane key="1" tab="基本信息">
-        <Form :label-col="{ span: 4 }">
+    <Tabs>
+      <TabPane key="1" tab="基本信息">
+        <Form :label-col="{ span: 4 }" ref="formInstance" :model="formData">
           <a-row>
             <a-col span="12">
-              <FormItem label="客户名称" v-bind="validateInfos.customerName">
+              <FormItem label="客户名称" name="customerName" :rules="formRules.customerName">
                 <Input
                   v-model:value="formData.customerName"
                   :placeholder="$t('ui.formRules.required')"
@@ -181,7 +190,7 @@ async function setupRegionSelect() {
               </FormItem>
             </a-col>
             <a-col span="12">
-              <FormItem label="客户电话" v-bind="validateInfos.customerPhone">
+              <FormItem label="客户电话" name="customerPhone" :rules="formRules.customerPhone">
                 <Input
                   v-model:value="formData.customerPhone"
                   :placeholder="$t('ui.formRules.required')"
@@ -191,7 +200,7 @@ async function setupRegionSelect() {
           </a-row>
           <a-row>
             <a-col span="12">
-              <FormItem label="客户标签" v-bind="validateInfos.customerLabel">
+              <FormItem label="客户标签" name="customerLabel" :rules="formRules.customerLabel">
                 <TreeSelect
                   v-model:value="formData.customerLabel"
                   :tree-data="labelList"
@@ -204,7 +213,7 @@ async function setupRegionSelect() {
               </FormItem>
             </a-col>
             <a-col span="12">
-              <FormItem label="客户编号" v-bind="validateInfos.customerNo">
+              <FormItem label="客户编号" name="customerNo" :rules="formRules.customerNo">
                 <Input
                   v-model:value="formData.customerNo"
                   :placeholder="$t('ui.formRules.required')"
@@ -214,7 +223,7 @@ async function setupRegionSelect() {
           </a-row>
           <a-row>
             <a-col span="12">
-              <FormItem label="客户来源" v-bind="validateInfos.customerWay">
+              <FormItem label="客户来源" name="customerWay" :rules="formRules.customerWay">
                 <Select
                   v-model:value="formData.customerWay"
                   :options="getDictOptions('customer_way')"
@@ -225,7 +234,7 @@ async function setupRegionSelect() {
               </FormItem>
             </a-col>
             <a-col span="12">
-              <FormItem label="省市区" v-bind="validateInfos.areaCascade">
+              <FormItem label="省市区" name="areaCascade" :rules="formRules.areaCascade">
                 <TreeSelect
                   :tree-data="treeData"
                   :tree-line="{ showLeafIcon: false }"
@@ -242,7 +251,7 @@ async function setupRegionSelect() {
           </a-row>
           <a-row>
             <a-col span="12">
-              <FormItem label="详细地址" v-bind="validateInfos.address">
+              <FormItem label="详细地址" name="address" :rules="formRules.address">
                 <Input
                   v-model:value="formData.address"
                   :placeholder="$t('ui.formRules.required')"
@@ -250,7 +259,7 @@ async function setupRegionSelect() {
               </FormItem>
             </a-col>
             <a-col span="12">
-              <FormItem label="客户状态" v-bind="validateInfos.customerStatus">
+              <FormItem label="客户状态" name="customerStatus" :rules="formRules.customerStatus">
                 <Select
                   v-model:value="formData.customerStatus"
                   :options="getDictOptions('customer_status')"
@@ -263,8 +272,8 @@ async function setupRegionSelect() {
           </a-row>
           <a-row>
             <a-col span="24">
-              <FormItem label="备注" v-bind="validateInfos.remark">
-                <Textarea
+              <FormItem label="备注" name="remark" :rules="formRules.remark">
+                <TextArea
                   v-model:value="formData.remark"
                   :placeholder="$t('ui.formRules.required')"
                   :rows="4"
@@ -273,28 +282,28 @@ async function setupRegionSelect() {
             </a-col>
           </a-row>
         </Form>
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="2" tab="跟进记录">
-        <customerFollow v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="3" tab="联系人">
-        <customerLiaison v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="4" tab="合同">
-        <contract v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="5" tab="账目记录">
-        <bill v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="6" tab="发票">
-        <invoice v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="7" tab="团队成员">
-        <customerTeam v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-      <a-tab-pane v-if="title === '编辑'" key="8" tab="动态记录">
-        <customerRecord v-if="visible" :customerid="formData.id" />
-      </a-tab-pane>
-    </a-tabs>
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="2" tab="跟进记录">
+        <customerFollow :customerid="formData.id" />
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="3" tab="联系人">
+        <customerLiaison :customerid="formData.id" />
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="4" tab="合同">
+        <contract :customerid="formData.id" />
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="5" tab="账目记录">
+        <bill :customerid="formData.id" />
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="6" tab="发票">
+        <invoice :customerid="formData.id" />
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="7" tab="团队成员">
+        <customerTeam :customerid="formData.id" />
+      </TabPane>
+      <TabPane v-if="title === '查看'" key="8" tab="动态记录">
+        <customerRecord :customerid="formData.id" />
+      </TabPane>
+    </Tabs>
   </BasicDrawer>
 </template>
