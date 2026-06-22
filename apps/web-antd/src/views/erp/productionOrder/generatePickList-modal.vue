@@ -353,7 +353,7 @@ async function handleClosed() {
           </FormItem>
         </Col>
         <Col :span="8">
-          <FormItem label="领料部门" name="deptId">
+          <FormItem label="领料部门" name="deptId" :rules="[{ required: true, message: $t('ui.formRules.selectRequired') }]">
             <TreeSelect
               v-model:value="formData.deptId"
               :tree-data="deptTreeData"
@@ -366,7 +366,7 @@ async function handleClosed() {
           </FormItem>
         </Col>
         <Col :span="8">
-          <FormItem label="领料人" name="picker">
+          <FormItem label="领料人" name="picker" :rules="[{ required: true, message: $t('ui.formRules.selectRequired') }]">
             <Select
               v-model:value="formData.picker"
               :options="staffOptions"
